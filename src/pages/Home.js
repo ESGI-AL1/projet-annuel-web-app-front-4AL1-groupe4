@@ -1,9 +1,10 @@
+// pages/Home.js
 import React, { useContext, useState, useEffect } from 'react';
 import { UserContext } from "../contexts/UserContext";
 import { getPrograms } from "../services/api.program";
 import { FaHeart, FaRegHeart, FaShareSquare, FaUserPlus } from 'react-icons/fa';
 import loginicon from "../assets/photos/user.png";
-import {getAllUsers} from "../services/api.user";
+import { getAllUsers } from "../services/api.user";
 
 function Home() {
     const { user } = useContext(UserContext);
@@ -16,8 +17,13 @@ function Home() {
 
     useEffect(() => {
         fetchPrograms();
-        fetchUsers();
     }, []);
+
+    useEffect(() => {
+        if (user) {
+            fetchUsers();
+        }
+    }, [user]);
 
     const fetchPrograms = async () => {
         try {
@@ -124,7 +130,7 @@ function Home() {
     );
 }
 
-const FilePreview = ({fileUrl}) => {
+const FilePreview = ({ fileUrl }) => {
     const [content, setContent] = useState('');
 
     const fetchFileContent = async (fileUrl) => {
