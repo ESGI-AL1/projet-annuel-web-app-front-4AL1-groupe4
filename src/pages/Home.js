@@ -3,43 +3,41 @@ import { UserContext } from "../contexts/UserContext";
 import { getPrograms } from "../services/api.program";
 import { FaHeart, FaRegHeart, FaShareSquare, FaUserPlus } from 'react-icons/fa';
 import loginicon from "../assets/photos/user.png";
+import {getAllUsers} from "../services/api.user";
 
 function Home() {
     const { user } = useContext(UserContext);
     const [programs, setPrograms] = useState([]);
     const [filteredPrograms, setFilteredPrograms] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
-    //@TODO change  friends by get all users and manage friends system
-    const [friends, setFriends] = useState([
-        { id: 1, first_name: "John", last_name: "Doe" },
-        { id: 2, first_name: "Jane", last_name: "Smith" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-        { id: 3, first_name: "Mark", last_name: "Johnson" },
-    ]);
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         fetchPrograms();
+        fetchUsers();
     }, []);
 
     const fetchPrograms = async () => {
         try {
             const response = await getPrograms();
-            response  = response.data
             setPrograms(response.data);
             setFilteredPrograms(response.data);
         } catch (error) {
             console.error("Error fetching programs", error);
+        }
+    };
+
+    const fetchUsers = async () => {
+        try {
+            const response = await getAllUsers();
+            const filteredUsers = response.data.filter(u => u.id !== user.id);
+            setUsers(filteredUsers);
+            setLoading(false);
+        } catch (error) {
+            setError("There was an error fetching the users!");
+            setLoading(false);
         }
     };
 
@@ -54,6 +52,14 @@ function Home() {
         console.log("Add friend with ID:", friendId);
         // Logic to add friend goes here
     };
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
 
     return (
         <div className="container mx-auto px-4 pt-32 flex">
@@ -93,7 +99,7 @@ function Home() {
             <div className="w-1/3 pl-4">
                 <div className="bg-white p-4 rounded shadow-lg">
                     <h2 className="text-2xl font-bold mb-4">Ajouter des amis</h2>
-                    {friends.map(friend => (
+                    {users.map(friend => (
                         <div key={friend.id}
                              className="flex items-center mb-4 p-2 border rounded bg-gray-100">
                             <div className="w-10 h-10 rounded-full overflow-hidden border border-white">
