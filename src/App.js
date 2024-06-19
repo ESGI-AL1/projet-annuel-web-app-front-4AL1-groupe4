@@ -17,30 +17,35 @@ import { UserProvider } from './contexts/UserContext';
 
 function App() {
   return (
-      <UserProvider>
-        <Router>
-          <Navbar />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-           
+      <div className="bg-gray-100">
+        <UserProvider>
+
+          <Router>
+            <Navbar />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
 
-            <Route element={<PrivateRoute />}>
-            <Route path="" element={<Home />} />
-            <Route path="/" element={<Home />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/editor" element={<MyEditor />} />
-              <Route path="/programmes" element={<Programmes />} />
-              <Route path="/pipeline" element={<Pipeline />} />
-            </Route>
 
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Router>
-      </UserProvider>
+              <Route element={<PrivateRoute />}>
+                <Route path="" element={<Home />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/editor" element={<MyEditor />} />
+                <Route path="/programmes" element={<Programmes />} />
+                <Route path="/pipeline" element={<Pipeline />} />
+              </Route>
+
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Router>
+
+        </UserProvider>
+      </div>
+
   );
 }
 
