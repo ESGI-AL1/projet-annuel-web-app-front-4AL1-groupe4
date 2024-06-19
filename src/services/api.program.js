@@ -14,7 +14,7 @@ export const createProgram = (programData) => baseUrl.post("/programs/", program
 
 export const deleteProgram = (programId) => baseUrl.delete(`/programs/delete/${programId}/`);
 
-export const getPublicPrograms = () => baseUrl.get("/programs/public/all");
+export const getPublicPrograms = () => baseUrl.get("/programs/public/all/");
 
 export const updateProgram = (programId, programData) => baseUrl.put(`/programs/${programId}/`, programData);
 
