@@ -4,6 +4,14 @@ import { FaSignOutAlt, FaGlobe, FaMoon, FaUserEdit, FaFileAlt, FaBell, FaEnvelop
 import { googleLogout } from '@react-oauth/google';
 import loginicon from '../logo.svg'; // Image par défaut
 import { UserContext } from "../contexts/UserContext";
+import {GoFileCode, GoMail} from "react-icons/go";
+import { CiLogout } from "react-icons/ci";
+import { GoBell } from "react-icons/go";
+import { TbUserCog } from "react-icons/tb";
+
+
+
+
 
 function Navbar() {
     const { user, setUser } = useContext(UserContext);
@@ -162,7 +170,7 @@ function Navbar() {
                     {user && (
                         <div className="relative ml-4">
                             <button onClick={handleNotificationsClick} className="focus:outline-none">
-                                <FaBell className="inline-block text-gray-400" style={{fontSize: '1.5rem'}}/>
+                                <GoBell className="inline-block text-gray-400" style={{fontSize: '1.5rem'}}/>
                                 {hasNewNotification && <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
                             </button>
                         </div>
@@ -170,7 +178,7 @@ function Navbar() {
                     {user && (
                         <div className="relative ml-4">
                             <button onClick={handleMessagesClick} className="focus:outline-none">
-                                <FaEnvelope className="inline-block text-gray-400" style={{fontSize: '1.5rem'}}/>
+                                <GoMail className="inline-block text-gray-400" style={{fontSize: '1.5rem'}}/>
                                 {hasNewMessage && <span className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
                             </button>
                         </div>
@@ -195,18 +203,18 @@ function Navbar() {
                                     >
                                         <a href="/profile"
                                            className="block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center">
-                                            <FaUserEdit className="mr-2"/> Modifier Profil
+                                            <TbUserCog className="mr-2"/> Modifier Profil
                                         </a>
                                         <a href="/programmes"
                                            className="block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center">
-                                            <FaFileAlt className="mr-2"/> Programmes
+                                            <GoFileCode className="mr-2"/> Programmes
                                         </a>
 
                                         <button
                                             onClick={handleSignOut}
                                             className="w-full text-left block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center"
                                         >
-                                            <FaSignOutAlt className="mr-2"/> Déconnexion
+                                            <CiLogout className="mr-2"/> Déconnexion
                                         </button>
 
                                     </div>

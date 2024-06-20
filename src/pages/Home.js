@@ -4,7 +4,8 @@ import { getPrograms, getPublicPrograms, updateProgram } from "../services/api.p
 import { createAction } from "../services/api.action";
 import { createComment, getComments, updateComment, deleteComment } from "../services/api.coment";
 import { getUserInformation } from "../services/api.user";
-import { FaHeart, FaRegHeart, FaThumbsUp, FaShareSquare, FaUserPlus, FaEllipsisV, FaEdit, FaTrash, FaPaperPlane, FaReply } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaUserPlus, FaEllipsisV, FaEdit, FaTrash, FaPaperPlane } from 'react-icons/fa';
+import { GoReply, GoShareAndroid, GoThumbsup, GoThumbsdown } from 'react-icons/go';
 import loginicon from "../assets/photos/user.png";
 import { getAllUsers } from "../services/api.user";
 
@@ -114,6 +115,7 @@ const ProgramCard = ({ program, user }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null);
+    const [editCommentId, setEditCommentId] = useState(null);
     const commentInputRef = useRef(null);
 
     useEffect(() => {
@@ -131,6 +133,11 @@ const ProgramCard = ({ program, user }) => {
     };
 
     const handleAddComment = async () => {
+        if (editCommentId) {
+            handleUpdateComment();
+            return;
+        }
+
         try {
             const response = await createComment({
                 text: newComment,
@@ -163,16 +170,16 @@ const ProgramCard = ({ program, user }) => {
 
     const handleEditComment = (comment) => {
         setNewComment(comment.text);
-        setReplyTo(comment);
+        setEditCommentId(comment.id);
     };
 
     const handleUpdateComment = async () => {
-        if (!replyTo) return;
+        if (!editCommentId) return;
 
         try {
-            await updateComment(replyTo.id, { text: newComment });
+            await updateComment(editCommentId, { text: newComment });
             setNewComment('');
-            setReplyTo(null);
+            setEditCommentId(null);
             fetchComments();
         } catch (error) {
             console.error("Error updating comment", error);
@@ -202,8 +209,9 @@ const ProgramCard = ({ program, user }) => {
             )}
             <div className="flex items-center mt-2 space-x-2">
                 <IconToggle icon={FaRegHeart} activeIcon={FaHeart} activeColor="text-red-500" size="1rem" actionType="love" programId={program.id} />
-                <IconToggle icon={FaThumbsUp} activeIcon={FaThumbsUp} activeColor="text-blue-500" size="1rem" actionType="like" programId={program.id} />
-                <IconToggle icon={FaShareSquare} activeIcon={FaShareSquare} activeColor="text-green-500" size="1rem" actionType="share" programId={program.id} isVisible={program.is_visible} />
+                <IconToggle icon={GoThumbsup} activeIcon={GoThumbsup} activeColor="text-blue-500" size="1rem" actionType="like" programId={program.id} />
+                <IconToggle icon={GoThumbsdown} activeIcon={GoThumbsdown} activeColor="text-blue-500" size="1rem" actionType="like" programId={program.id} />
+                <IconToggle icon={GoShareAndroid} activeIcon={GoShareAndroid} activeColor="text-green-500" size="1rem" actionType="share" programId={program.id} isVisible={program.is_visible} />
             </div>
             {program.authorId === user.id && (
                 <div className="absolute top-2 right-2">
@@ -302,9 +310,10 @@ const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment 
             </div>
             <div className="flex items-center mt-2 space-x-2">
                 <IconToggle icon={FaRegHeart} activeIcon={FaHeart} activeColor="text-red-500" size="1rem" actionType="love" commentId={comment.id} />
-                <IconToggle icon={FaThumbsUp} activeIcon={FaThumbsUp} activeColor="text-blue-500" size="1rem" actionType="like" commentId={comment.id} />
+                <IconToggle icon={GoThumbsup} activeIcon={GoThumbsup} activeColor="text-blue-500" size="1rem" actionType="like" commentId={comment.id} />
+                <IconToggle icon={GoThumbsdown} activeIcon={GoThumbsdown} activeColor="text-blue-500" size="1rem" actionType="like" commentId={comment.id} />
                 <button onClick={() => handleReply(comment)} className="text-blue-500 flex items-center">
-                    <FaReply className="mr-1" /> Replier
+                    <GoReply className="mr-1" /> Replier
                 </button>
             </div>
             {comment.replies && comment.replies.map(reply => (
