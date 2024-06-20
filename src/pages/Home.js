@@ -116,10 +116,12 @@ const ProgramCard = ({ program, user }) => {
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null);
     const [editCommentId, setEditCommentId] = useState(null);
+    const [author, setAuthor] = useState(null);
     const commentInputRef = useRef(null);
 
     useEffect(() => {
         fetchComments();
+        fetchAuthor();
     }, []);
 
     const fetchComments = async () => {
@@ -129,6 +131,15 @@ const ProgramCard = ({ program, user }) => {
             setComments(programComments);
         } catch (error) {
             console.error("Error fetching comments", error);
+        }
+    };
+
+    const fetchAuthor = async () => {
+        try {
+            const response = await getUserInformation(program.author);
+            setAuthor(response.data);
+        } catch (error) {
+            console.error("Error fetching author information", error);
         }
     };
 
@@ -197,6 +208,17 @@ const ProgramCard = ({ program, user }) => {
 
     return (
         <div className="p-4 border border-gray-100 rounded-lg shadow-lg bg-white relative">
+            {author && (
+                <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200">
+                        <img src={author.profile_picture || loginicon} alt="Author" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="ml-4">
+                        <p className="font-bold">{author.first_name} {author.last_name}</p>
+                    </div>
+                </div>
+            )}
+            <hr className="my-2"/>
             <h2 className="text-xl font-bold">{program.title}</h2>
             <p className="text-gray-700">{program.description}</p>
             {program.file && (
