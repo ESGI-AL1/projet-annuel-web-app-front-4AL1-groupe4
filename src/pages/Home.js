@@ -1,7 +1,10 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { UserContext } from "../contexts/UserContext";
-import {getPrograms, getPublicPrograms, updateProgram} from "../services/api.program";
-import { FaHeart, FaRegHeart, FaThumbsUp, FaShareSquare, FaUserPlus, FaEllipsisV, FaEdit, FaTrash } from 'react-icons/fa';
+import { getPrograms, getPublicPrograms, updateProgram } from "../services/api.program";
+import { createAction } from "../services/api.action";
+import { createComment, getComments, updateComment, deleteComment } from "../services/api.coment";
+import { getUserInformation } from "../services/api.user";
+import { FaHeart, FaRegHeart, FaThumbsUp, FaShareSquare, FaUserPlus, FaEllipsisV, FaEdit, FaTrash, FaPaperPlane, FaReply } from 'react-icons/fa';
 import loginicon from "../assets/photos/user.png";
 import { getAllUsers } from "../services/api.user";
 
@@ -74,35 +77,7 @@ function Home() {
                 <div className="lg:w-2/3 lg:pr-4">
                     <div className="mt-4 space-y-4">
                         {filteredPrograms.map(program => (
-                            <div key={program.id} className="p-4 border border-gray-100 rounded-lg shadow-lg bg-white relative">
-                                <h2 className="text-xl font-bold">{program.title}</h2>
-                                <p className="text-gray-700">{program.description}</p>
-                                {program.file && (
-                                    <div className="mt-4">
-                                        <div className="border rounded p-2 text-gray-500">
-                                            <p>File Preview:</p>
-                                            <FilePreview fileUrl={program.file} />
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="flex items-center mt-2 space-x-2">
-                                    <IconToggle icon={FaHeart} activeIcon={FaRegHeart} activeColor="text-red-500" size="1rem" />
-                                    <IconToggle icon={FaThumbsUp} activeIcon={FaThumbsUp} activeColor="text-blue-500" size="1rem" />
-                                    <IconToggle icon={FaShareSquare} activeIcon={FaShareSquare} activeColor="text-green-500" size="1rem" programId={program.id} isVisible={program.is_visible} />
-                                </div>
-                                {program.authorId === user.id && (
-                                    <div className="absolute top-2 right-2">
-                                        <Menu programId={program.id} />
-                                    </div>
-                                )}
-                                <div className="mt-4">
-                                    <input
-                                        type="text"
-                                        placeholder="Commentaire..."
-                                        className="w-full p-2 border rounded border-gray-300"
-                                    />
-                                </div>
-                            </div>
+                            <ProgramCard key={program.id} program={program} user={user} />
                         ))}
                     </div>
                 </div>
@@ -135,17 +110,227 @@ function Home() {
     );
 }
 
-const IconToggle = ({ icon: Icon, activeIcon: ActiveIcon, activeColor, size, programId, isVisible }) => {
-    const [active, setActive] = useState(isVisible);
+const ProgramCard = ({ program, user }) => {
+    const [comments, setComments] = useState([]);
+    const [newComment, setNewComment] = useState('');
+    const [replyTo, setReplyTo] = useState(null);
+    const commentInputRef = useRef(null);
 
-    const handleToggle = async () => {
-        const newVisibility = !active;
-        setActive(newVisibility);
+    useEffect(() => {
+        fetchComments();
+    }, []);
+
+    const fetchComments = async () => {
+        try {
+            const response = await getComments();
+            const programComments = response.data.filter(comment => comment.program === program.id);
+            setComments(programComments);
+        } catch (error) {
+            console.error("Error fetching comments", error);
+        }
+    };
+
+    const handleAddComment = async () => {
+        try {
+            const response = await createComment({
+                text: newComment,
+                program: program.id,
+                parent: replyTo ? replyTo.id : null
+            });
+            setComments([...comments, response.data]);
+            setNewComment('');
+            setReplyTo(null);
+        } catch (error) {
+            console.error("Error adding comment", error);
+        }
+    };
+
+    const handleReply = async (comment) => {
+        try {
+            const response = await getUserInformation(comment.author_id);
+            const authorName = `${response.data.first_name} ${response.data.last_name}`;
+            setReplyTo(comment);
+            const replyText = `Replied to @${authorName}: `;
+            setNewComment(replyText);
+            setTimeout(() => {
+                commentInputRef.current.focus();
+                commentInputRef.current.setSelectionRange(replyText.length, replyText.length);
+            }, 0);
+        } catch (error) {
+            console.error("Error fetching author information", error);
+        }
+    };
+
+    const handleEditComment = (comment) => {
+        setNewComment(comment.text);
+        setReplyTo(comment);
+    };
+
+    const handleUpdateComment = async () => {
+        if (!replyTo) return;
 
         try {
-            await updateProgram(programId, { is_visible: newVisibility });
+            await updateComment(replyTo.id, { text: newComment });
+            setNewComment('');
+            setReplyTo(null);
+            fetchComments();
         } catch (error) {
-            console.error("Error updating program visibility", error);
+            console.error("Error updating comment", error);
+        }
+    };
+
+    const handleDeleteComment = async (commentId) => {
+        try {
+            await deleteComment(commentId);
+            fetchComments();
+        } catch (error) {
+            console.error("Error deleting comment", error);
+        }
+    };
+
+    return (
+        <div className="p-4 border border-gray-100 rounded-lg shadow-lg bg-white relative">
+            <h2 className="text-xl font-bold">{program.title}</h2>
+            <p className="text-gray-700">{program.description}</p>
+            {program.file && (
+                <div className="mt-4">
+                    <div className="border rounded p-2 text-gray-500">
+                        <p>File Preview:</p>
+                        <FilePreview fileUrl={program.file} />
+                    </div>
+                </div>
+            )}
+            <div className="flex items-center mt-2 space-x-2">
+                <IconToggle icon={FaRegHeart} activeIcon={FaHeart} activeColor="text-red-500" size="1rem" actionType="love" programId={program.id} />
+                <IconToggle icon={FaThumbsUp} activeIcon={FaThumbsUp} activeColor="text-blue-500" size="1rem" actionType="like" programId={program.id} />
+                <IconToggle icon={FaShareSquare} activeIcon={FaShareSquare} activeColor="text-green-500" size="1rem" actionType="share" programId={program.id} isVisible={program.is_visible} />
+            </div>
+            {program.authorId === user.id && (
+                <div className="absolute top-2 right-2">
+                    <Menu programId={program.id} />
+                </div>
+            )}
+            <div className="mt-4 space-y-2 w-full max-h-40 overflow-y-auto">
+                {comments.map(comment => (
+                    <Comment
+                        key={comment.id}
+                        comment={comment}
+                        handleReply={handleReply}
+                        handleEditComment={handleEditComment}
+                        handleDeleteComment={handleDeleteComment}
+                    />
+                ))}
+            </div>
+            <div className="mt-4 flex items-center">
+                <textarea
+                    ref={commentInputRef}
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Commentaire..."
+                    className="flex-grow p-2 border rounded border-gray-300"
+                    rows={3}
+                />
+                <button onClick={handleAddComment} className="ml-2">
+                    <FaPaperPlane className="text-blue-500" style={{ fontSize: '1.5rem' }} />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment }) => {
+    const [author, setAuthor] = useState(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef(null);
+
+    useEffect(() => {
+        fetchAuthor();
+    }, []);
+
+    const fetchAuthor = async () => {
+        try {
+            const response = await getUserInformation(comment.author_id);
+            setAuthor(response.data);
+        } catch (error) {
+            console.error("Error fetching author information", error);
+        }
+    };
+
+    const handleClickOutside = (event) => {
+        if (menuRef.current && !menuRef.current.contains(event.target)) {
+            setIsMenuOpen(false);
+        }
+    };
+
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    return (
+        <div className="p-2 border border-gray-100 rounded-lg shadow bg-white ml-4 relative">
+            {author && (
+                <p className="font-bold">{author.first_name} {author.last_name}</p>
+            )}
+            <p className="text-gray-700">{comment.text}</p>
+            <div className="absolute top-2 right-2">
+                <FaEllipsisV className="cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)} />
+                {isMenuOpen && (
+                    <div ref={menuRef} className="absolute right-0 mt-2 w-32 bg-white border border-gray-300 rounded shadow-lg">
+                        <button
+                            className="block w-full text-left px-4 py-2 text-blue-500 hover:bg-gray-200 flex items-center"
+                            onClick={() => {
+                                handleEditComment(comment);
+                                setIsMenuOpen(false);
+                            }}
+                        >
+                            <FaEdit className="mr-2" /> Modifier
+                        </button>
+                        <button
+                            className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-200 flex items-center"
+                            onClick={() => {
+                                handleDeleteComment(comment.id);
+                                setIsMenuOpen(false);
+                            }}
+                        >
+                            <FaTrash className="mr-2" /> Supprimer
+                        </button>
+                    </div>
+                )}
+            </div>
+            <div className="flex items-center mt-2 space-x-2">
+                <IconToggle icon={FaRegHeart} activeIcon={FaHeart} activeColor="text-red-500" size="1rem" actionType="love" commentId={comment.id} />
+                <IconToggle icon={FaThumbsUp} activeIcon={FaThumbsUp} activeColor="text-blue-500" size="1rem" actionType="like" commentId={comment.id} />
+                <button onClick={() => handleReply(comment)} className="text-blue-500 flex items-center">
+                    <FaReply className="mr-1" /> Replier
+                </button>
+            </div>
+            {comment.replies && comment.replies.map(reply => (
+                <div key={reply.id} className="ml-8 mt-2">
+                    <Comment comment={reply} handleReply={handleReply} handleEditComment={handleEditComment} handleDeleteComment={handleDeleteComment} />
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const IconToggle = ({ icon: Icon, activeIcon: ActiveIcon, activeColor, size, actionType, programId, commentId }) => {
+    const [active, setActive] = useState(false);
+
+    const handleToggle = async () => {
+        const newActive = !active;
+        setActive(newActive);
+
+        try {
+            await createAction({
+                action: actionType,
+                program: programId,
+                comment: commentId
+            });
+        } catch (error) {
+            console.error("Error creating action", error);
         }
     };
 

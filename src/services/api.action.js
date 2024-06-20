@@ -1,4 +1,13 @@
-import {baseUrl} from "./axios.config";
+import { baseUrl } from "./axios.config";
+
+baseUrl.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 
 export const getActions = () => baseUrl.get("/actions/");
 
