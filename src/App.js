@@ -14,6 +14,7 @@ import Pipeline from "./pages/Pipeline";
 
 import PrivateRoute from './components/PrivateRoute';
 import { UserProvider } from './contexts/UserContext';
+import FooterBar from "./components/FooterBar";
 
 function App() {
   return (
