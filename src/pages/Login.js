@@ -26,6 +26,10 @@ function LoginPage() {
 			const res = await getToken(data);
 			localStorage.setItem('token', res.data.access);
 			const decoded = jwtDecode(res.data.access);
+			console.log(res);
+			console.log(decoded);
+			console.log(res.data);
+			console.log(res.data.access);
 			const result = await getUserInformation(decoded.user_id);
 			setUser(result.data);
 			navigate('/home');
@@ -46,6 +50,7 @@ function LoginPage() {
 
 	const handleOAuthLogin = async (credentialResponse) => {
 		const decoded = jwtDecode(credentialResponse.credential);
+		console.log(decoded)
 		const formData = {
 			first_name: decoded.given_name,
 			last_name: decoded.family_name,
@@ -63,6 +68,7 @@ function LoginPage() {
 			});
 			localStorage.setItem('token', res.data.access);
 			const decoded = jwtDecode(res.data.access);
+			console.log(decoded);
 			const result = await getUserInformation(decoded.user_id);
 			setUser({ ...result.data, profile_picture: formData.profile_picture });
 			navigate('/home');
@@ -78,6 +84,7 @@ function LoginPage() {
 					});
 					localStorage.setItem('token', res.data.access);
 					const decoded = jwtDecode(res.data.access);
+					console.log(decoded);
 					const result = await getUserInformation(decoded.user_id);
 					setUser({ ...result.data, profile_picture: formData.profile_picture });
 					navigate('/home');

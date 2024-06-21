@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    FaSignOutAlt,
     FaGlobe,
     FaMoon,
-    FaUserEdit,
-    FaFileAlt,
-    FaBell,
-    FaEnvelope,
-    FaPlusCircle,
-    FaUserFriends
 } from "react-icons/fa";
 import { TbUsersGroup } from "react-icons/tb";
 import { TbUserEdit } from "react-icons/tb";
@@ -118,7 +111,7 @@ function Navbar() {
     };
 
     return (
-        <div className="flex flex-col flex-grow">
+        <div className="flex flex-col flex-grow pb-7">
             <nav className={`bg-gray-800 py-4 fixed top-0 w-full z-20 ${darkMode ? 'text-white' : 'text-gray-400'}`}>
                 <div className="container mx-auto flex justify-between items-center">
                     <a href="/" className="text-lg font-semibold" onClick={handleHomeClick}>
@@ -244,10 +237,10 @@ function Navbar() {
 
             {/* Second Navbar */}
             {user && (
-                <nav className="bg-white py-2 fixed top-16 w-full z-10 shadow pt-8 pb-4">
+                <nav className="bg-gray-100 py-2 fixed top-16 w-full z-20 shadow pt-8 pb-4">
                     <div className="container mx-auto flex justify-end items-center space-x-4">
                         <button
-                            onClick={() => console.log("Créer un groupe")}
+                            onClick={() => navigate('/createGroupe')}
                             className=" hover:bg-blue-400 text-black font-light py-2 border hover:border-white border-gray-300 px-7 rounded-md flex items-center"
                         >
                             <TbUsersGroup className="mr-2"/> Créer un groupe

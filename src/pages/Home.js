@@ -1,13 +1,14 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
 import { UserContext } from "../contexts/UserContext";
-import { getPrograms, getPublicPrograms, updateProgram } from "../services/api.program";
+import { getPrograms, getPublicPrograms } from "../services/api.program";
 import { createAction } from "../services/api.action";
 import { createComment, getComments, updateComment, deleteComment } from "../services/api.coment";
-import { getUserInformation } from "../services/api.user";
+import { getUserInformation, getAllUsers } from "../services/api.user";
+import { getGroups } from "../services/api.groups";
 import { FaHeart, FaRegHeart, FaUserPlus, FaEllipsisV, FaEdit, FaTrash, FaPaperPlane } from 'react-icons/fa';
 import { GoReply, GoShareAndroid, GoThumbsup, GoThumbsdown } from 'react-icons/go';
 import loginicon from "../assets/photos/user.png";
-import { getAllUsers } from "../services/api.user";
+import { Editor } from '@monaco-editor/react';
 
 function Home() {
     const { user } = useContext(UserContext);
@@ -17,9 +18,11 @@ function Home() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [groups, setGroups] = useState([]);
 
     useEffect(() => {
         fetchPrograms();
+        fetchGroups();
     }, []);
 
     useEffect(() => {
@@ -51,6 +54,15 @@ function Home() {
         }
     };
 
+    const fetchGroups = async () => {
+        try {
+            const response = await getGroups();
+            setGroups(response.data);
+        } catch (error) {
+            console.error("Error fetching groups", error);
+        }
+    };
+
     const handleSearch = () => {
         const filtered = programs.filter(program =>
             program.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -78,32 +90,54 @@ function Home() {
                 <div className="lg:w-2/3 lg:pr-4">
                     <div className="mt-4 space-y-4">
                         {filteredPrograms.map(program => (
-                            <ProgramCard key={program.id} program={program} user={user} />
+                            <div key={program.id} className="p-4 border border-gray-100 rounded-lg shadow-lg bg-white relative">
+                                <ProgramDetails program={program} user={user} />
+                            </div>
                         ))}
                     </div>
                 </div>
 
-                {/* Friends Section */}
-                <div className="lg:w-1/3 lg:pl-4 mt-8 lg:mt-0">
-                    <div className="bg-white p-4 rounded shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4">Ajouter des amis</h2>
-                        {users.map(friend => (
-                            <div key={friend.id} className="flex items-center mb-4 p-2 border rounded bg-gray-100">
-                                <div className="w-10 h-10 rounded-full overflow-hidden border border-white">
-                                    <img src={friend.profile_picture || loginicon} alt="Profile" className="w-full h-full object-cover"/>
+                {/* Friends and Groups Section */}
+                <div className="lg:w-1/3 lg:pl-4 mt-8 lg:mt-0 space-y-8">
+                    <div className="bg-gray-100 rounded-lg shadow-lg max-h-96 overflow-y-auto relative mt-5">
+                        <div className="sticky top-0 bg-white p-4 z-10">
+                            <h2 className="text-2xl font-bold mb-4">Ajouter des amis</h2>
+                        </div>
+                        <div className="p-4">
+                            {users.map(friend => (
+                                <div key={friend.id} className="flex items-center mb-4 p-2 border rounded bg-gray-100">
+                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-white">
+                                        <img src={friend.profile_picture || loginicon} alt="Profile" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="font-bold">{friend.first_name} {friend.last_name}</p>
+                                        <p className="text-sm text-gray-600">{friend.first_name}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleAddFriend(friend.id)}
+                                        className="flex items-center bg-blue-500 text-white px-3 py-1 ml-auto rounded hover:bg-blue-700"
+                                    >
+                                        <FaUserPlus className="mr-2" /> Ajouter
+                                    </button>
                                 </div>
-                                <div className="ml-4">
-                                    <p className="font-bold">{friend.first_name} {friend.last_name}</p>
-                                    <p className="text-sm text-gray-600">{friend.first_name}</p>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-gray-100 rounded shadow-lg max-h-96 overflow-y-auto relative">
+                        <div className="sticky top-0 bg-white p-4 z-10">
+                            <h2 className="text-2xl font-bold mb-4">Liste des groupes</h2>
+                        </div>
+                        <div className="p-4">
+                            {groups.map(group => (
+                                <div key={group.id} className="flex items-center mb-4 p-2 border rounded bg-gray-100">
+                                    <div className="ml-4">
+                                        <p className="font-bold">{group.name}</p>
+                                        <p className="text-sm text-gray-600">{group.description}</p>
+                                    </div>
                                 </div>
-                                <button
-                                    onClick={() => handleAddFriend(friend.id)}
-                                    className="flex items-center bg-blue-500 text-white px-3 py-1 ml-auto rounded hover:bg-blue-700"
-                                >
-                                    <FaUserPlus className="mr-2"/> Ajouter
-                                </button>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -111,7 +145,7 @@ function Home() {
     );
 }
 
-const ProgramCard = ({ program, user }) => {
+const ProgramDetails = ({ program, user }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null);
@@ -153,7 +187,6 @@ const ProgramCard = ({ program, user }) => {
             const response = await createComment({
                 text: newComment,
                 program: program.id,
-                parent: replyTo ? replyTo.id : null
             });
             setComments([...comments, response.data]);
             setNewComment('');
@@ -207,7 +240,7 @@ const ProgramCard = ({ program, user }) => {
     };
 
     return (
-        <div className="p-4 border border-gray-100 rounded-lg shadow-lg bg-white relative">
+        <>
             {author && (
                 <div className="flex items-center mb-4">
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200">
@@ -218,16 +251,11 @@ const ProgramCard = ({ program, user }) => {
                     </div>
                 </div>
             )}
-            <hr className="my-2"/>
+            <hr className="my-2" />
             <h2 className="text-xl font-bold">{program.title}</h2>
             <p className="text-gray-700">{program.description}</p>
             {program.file && (
-                <div className="mt-4">
-                    <div className="border rounded p-2 text-gray-500">
-                        <p>File Preview:</p>
-                        <FilePreview fileUrl={program.file} />
-                    </div>
-                </div>
+                <FilePreview fileUrl={program.file} />
             )}
             <div className="flex items-center mt-2 space-x-2">
                 <IconToggle icon={FaRegHeart} activeIcon={FaHeart} activeColor="text-red-500" size="1rem" actionType="love" programId={program.id} />
@@ -264,7 +292,7 @@ const ProgramCard = ({ program, user }) => {
                     <FaPaperPlane className="text-blue-500" style={{ fontSize: '1.5rem' }} />
                 </button>
             </div>
-        </div>
+        </>
     );
 };
 
@@ -300,7 +328,7 @@ const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment 
     }, []);
 
     return (
-        <div className="p-2 border border-gray-100 rounded-lg shadow bg-white ml-4 relative">
+        <div className={`p-2 border border-gray-100 rounded-lg shadow bg-white relative ${comment.parent ? 'ml-6' : ''}`}>
             {author && (
                 <p className="font-bold">{author.first_name} {author.last_name}</p>
             )}
@@ -451,9 +479,23 @@ const FilePreview = ({ fileUrl }) => {
     }, [fileUrl]);
 
     return (
-        <pre className="bg-gray-100 p-2 rounded max-h-48 overflow-auto">
-            {content}
-        </pre>
+        <div className="mt-4">
+            <div className="border rounded p-2 text-gray-500">
+                <p>File Preview:</p>
+                <div className="mt-2">
+                    <Editor
+                        height="20vh"
+                        language="javascripte"
+                        theme="vs-dark"
+                        value={content}
+                        options={{
+                            readOnly: true,
+                            automaticLayout: true,
+                        }}
+                    />
+                </div>
+            </div>
+        </div>
     );
 };
 

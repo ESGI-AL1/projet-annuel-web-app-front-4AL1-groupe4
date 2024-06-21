@@ -15,6 +15,8 @@ import Pipeline from "./pages/Pipeline";
 import PrivateRoute from './components/PrivateRoute';
 import { UserProvider } from './contexts/UserContext';
 import FooterBar from "./components/FooterBar";
+import CreateGroupePage from "./pages/CreateGroupePage";
+import GroupePage from "./pages/GroupePage";
 
 function App() {
   return (
@@ -37,6 +39,10 @@ function App() {
                 <Route path="/editor" element={<MyEditor />} />
                 <Route path="/programmes" element={<Programmes />} />
                 <Route path="/pipeline" element={<Pipeline />} />
+                <Route path="/createGroupe" element={<CreateGroupePage />} />
+                <Route path="/groupePage" element={<GroupePage />} />
+                <Route path="/groupePage/:id" element={<GroupePage />} />
+
               </Route>
 
               <Route path="/forgot-password" element={<ForgotPassword />} />
