@@ -11,7 +11,7 @@ import { RiUserFollowLine } from "react-icons/ri";
 
 
 import { googleLogout } from '@react-oauth/google';
-import loginicon from '../logo.svg'; // Image par défaut
+import loginicon from '../logo.svg';
 import { UserContext } from "../contexts/UserContext";
 import { GoFileCode, GoMail } from "react-icons/go";
 import { CiLogout } from "react-icons/ci";
@@ -198,9 +198,10 @@ function Navbar() {
                                         onMouseEnter={() => setProfileDropdownOpen(true)}
                                         className="focus:outline-none"
                                     >
-                                        <div className="w-10 h-10 rounded-full overflow-hidden border border-white">
-                                            <img src={user.profile_picture || loginicon} alt="Profile"
-                                                 className="w-full h-full object-cover"/>
+                                        <div className="w-10 h-10 rounded-full overflow-hidden flex justify-center items-center border border-white bg-gray-200">
+                                            <span
+                                                className="text-lg  text-center text-gray-600">{user.first_name.charAt(0)}{user.last_name.charAt(0)}</span>
+
                                         </div>
                                     </button>
                                     {profileDropdownOpen && (
