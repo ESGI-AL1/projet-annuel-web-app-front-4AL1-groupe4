@@ -123,7 +123,7 @@ const Profile = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 relative mt-12">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 relative mt-24">
             <div className="relative bg-white rounded-lg shadow-lg p-8 flex flex-col md:flex-row w-full max-w-6xl justify-center align-middle items-center">
                 <div className="absolute top-4 right-4">
                     <button
@@ -134,20 +134,12 @@ const Profile = () => {
                     </button>
                 </div>
                 <div className="flex flex-col items-center w-full md:w-1/3">
-                    <img src={userData?.profile_picture} alt="User" className="rounded-full h-32 w-32" />
-                    <h2 className="text-2xl font-bold mt-4">{user?.first_name} {user?.last_name}</h2>
-                    <p className="text-gray-500">Security Lead</p>
-                    <button className="mt-4 flex items-center text-blue-500 hover:text-blue-700">
-                        <FaUserPlus className="mr-2" /> Follow
-                    </button>
-                    <div className="mt-8">
-                        <ul className="text-gray-700">
-                            <li className="py-1">Profile</li>
-                            <li className="py-1">Tasks</li>
-                            <li className="py-1">Calendar</li>
-                            <li className="py-1">Files</li>
-                        </ul>
+                    <div className="rounded-full h-32 w-32 bg-gray-300 flex items-center justify-center">
+        <span className="text-4xl font-bold text-white">
+            {userData?.first_name.charAt(0)}{userData?.last_name.charAt(0)}
+        </span>
                     </div>
+                    <h2 className="text-2xl font-bold mt-4">{user?.first_name} {user?.last_name}</h2>
                 </div>
                 <div className="w-full md:w-2/3 mt-8 md:mt-0 md:ml-8">
                     <form onSubmit={handleSubmit} className="space-y-4">

@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -14,11 +14,14 @@ import Pipeline from "./pages/Pipeline";
 
 import PrivateRoute from './components/PrivateRoute';
 import { UserProvider } from './contexts/UserContext';
-import FooterBar from "./components/FooterBar";
 import CreateGroupePage from "./pages/CreateGroupePage";
 import GroupePage from "./pages/GroupePage";
+import {initializeUsers} from "./utils/initializeUsers";
 
 function App() {
+  useEffect(() => {
+    initializeUsers();
+  }, []);
   return (
       <div className="bg-gray-100">
         <UserProvider>

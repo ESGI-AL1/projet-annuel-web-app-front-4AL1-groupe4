@@ -10,6 +10,7 @@ baseUrl.interceptors.request.use((config) => {
 
 
 export const currentUser = (data) => baseUrl.get("/user/me/");
+export const deletUsers = (data) => baseUrl.delete("/users/delete/");
 export const getUserInformation = (idUser) => baseUrl.get(`/user/informations/${idUser}/`);
 export const updateUserInformation = (idUser, user) => baseUrl.put(`/user/update/${idUser}/`, user);
 export const getAllUsers = () => baseUrl.get("/user/all/");

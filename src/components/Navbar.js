@@ -237,7 +237,7 @@ function Navbar() {
 
             {/* Second Navbar */}
             {user && (
-                <nav className="bg-gray-100 py-2 fixed top-16 w-full z-20 shadow pt-8 pb-4">
+                <nav className="bg-gray-100 py-2 fixed top-16 w-full z-10 shadow pt-8 pb-4">
                     <div className="container mx-auto flex justify-end items-center space-x-4">
                         <button
                             onClick={() => navigate('/createGroupe')}

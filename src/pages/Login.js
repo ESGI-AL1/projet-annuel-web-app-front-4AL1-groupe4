@@ -26,12 +26,19 @@ function LoginPage() {
 			const res = await getToken(data);
 			localStorage.setItem('token', res.data.access);
 			const decoded = jwtDecode(res.data.access);
+			const currentTime = Date.now() / 1000;
+			const timeRemaining = decoded.exp - currentTime;
 			console.log(res);
 			console.log(decoded);
 			console.log(res.data);
 			console.log(res.data.access);
 			const result = await getUserInformation(decoded.user_id);
 			setUser(result.data);
+			setTimeout(() => {
+				localStorage.removeItem('token');
+				setUser(null);
+				navigate('/login');
+			}, timeRemaining * 1000);
 			navigate('/home');
 		} catch (error) {
 			if (error.response) {
@@ -68,9 +75,16 @@ function LoginPage() {
 			});
 			localStorage.setItem('token', res.data.access);
 			const decoded = jwtDecode(res.data.access);
+			const currentTime = Date.now() / 1000;
+			const timeRemaining = decoded.exp - currentTime;
 			console.log(decoded);
 			const result = await getUserInformation(decoded.user_id);
 			setUser({ ...result.data, profile_picture: formData.profile_picture });
+			setTimeout(() => {
+				localStorage.removeItem('token');
+				setUser(null);
+				navigate('/login');
+			}, timeRemaining * 1000);
 			navigate('/home');
 		} catch (loginError) {
 			/**if it fails like it's the first time to connect with this  Google account it try to create a user in our api with this Google information
@@ -84,9 +98,16 @@ function LoginPage() {
 					});
 					localStorage.setItem('token', res.data.access);
 					const decoded = jwtDecode(res.data.access);
+					const currentTime = Date.now() / 1000;
+					const timeRemaining = decoded.exp - currentTime;
 					console.log(decoded);
 					const result = await getUserInformation(decoded.user_id);
 					setUser({ ...result.data, profile_picture: formData.profile_picture });
+					setTimeout(() => {
+						localStorage.removeItem('token');
+						setUser(null);
+						navigate('/login');
+					}, timeRemaining * 1000);
 					navigate('/home');
 				} catch (createUserError) {
 					notifyError("Error creating user: " + createUserError.message);

@@ -1,14 +1,16 @@
 import React, { useContext, useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { UserContext } from "../contexts/UserContext";
 import { getPrograms, getPublicPrograms } from "../services/api.program";
-import { createAction } from "../services/api.action";
+import { getActions, createAction, deleteAction } from "../services/api.action";
 import { createComment, getComments, updateComment, deleteComment } from "../services/api.coment";
 import { getUserInformation, getAllUsers } from "../services/api.user";
 import { getGroups } from "../services/api.groups";
-import { FaHeart, FaRegHeart, FaUserPlus, FaEllipsisV, FaEdit, FaTrash, FaPaperPlane } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaUserPlus, FaEllipsisV, FaEdit, FaTrash, FaPaperPlane, FaEnvelope } from 'react-icons/fa';
 import { GoReply, GoShareAndroid, GoThumbsup, GoThumbsdown } from 'react-icons/go';
 import loginicon from "../assets/photos/user.png";
 import { Editor } from '@monaco-editor/react';
+import { sendFriendRequest, listFriends, listFriendRequests, manageFriendRequest } from "../services/api.friendship";
 
 function Home() {
     const { user } = useContext(UserContext);
@@ -19,10 +21,17 @@ function Home() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [groups, setGroups] = useState([]);
+    const [actions, setActions] = useState([]);
+    const [friends, setFriends] = useState([]);
+    const [requests, setRequests] = useState([]);
+    const [sentRequests, setSentRequests] = useState([]);
 
     useEffect(() => {
         fetchPrograms();
         fetchGroups();
+        fetchActions();
+        fetchFriends();
+        fetchRequests();
     }, []);
 
     useEffect(() => {
@@ -42,6 +51,15 @@ function Home() {
         }
     };
 
+    const fetchGroups = async () => {
+        try {
+            const response = await getGroups();
+            setGroups(response.data);
+        } catch (error) {
+            console.error("Error fetching groups", error);
+        }
+    };
+
     const fetchUsers = async () => {
         try {
             const response = await getAllUsers();
@@ -54,12 +72,12 @@ function Home() {
         }
     };
 
-    const fetchGroups = async () => {
+    const fetchActions = async () => {
         try {
-            const response = await getGroups();
-            setGroups(response.data);
+            const response = await getActions();
+            setActions(response.data);
         } catch (error) {
-            console.error("Error fetching groups", error);
+            console.error("Error fetching actions", error);
         }
     };
 
@@ -70,9 +88,51 @@ function Home() {
         setFilteredPrograms(filtered);
     };
 
-    const handleAddFriend = (friendId) => {
-        console.log("Add friend with ID:", friendId);
-        // Logic to add friend goes here
+    const fetchFriends = async () => {
+        try {
+            const response = await listFriends();
+            setFriends(response.data);
+        } catch (error) {
+            console.error('Error fetching friends:', error);
+        }
+    };
+
+    const fetchRequests = async () => {
+        try {
+            const response = await listFriendRequests();
+            setRequests(response.data);
+            setSentRequests(response.data.filter(req => req.status === 'sent').map(req => req.friend));
+        } catch (error) {
+            console.error('Error fetching friend requests:', error);
+        }
+    };
+
+    const handleAddFriend = async (friendId) => {
+        try {
+            await sendFriendRequest(friendId);
+            setSentRequests([...sentRequests, friendId]);
+        } catch (error) {
+            console.error('Error sending friend request:', error);
+        }
+    };
+
+    const handleAcceptRequest = async (friendshipId) => {
+        try {
+            await manageFriendRequest(friendshipId, 'accept');
+            fetchFriends();
+            fetchRequests();
+        } catch (error) {
+            console.error('Error accepting friend request:', error);
+        }
+    };
+
+    const handleRejectRequest = async (friendshipId) => {
+        try {
+            await manageFriendRequest(friendshipId, 'reject');
+            fetchRequests();
+        } catch (error) {
+            console.error('Error rejecting friend request:', error);
+        }
     };
 
     if (loading) {
@@ -91,7 +151,7 @@ function Home() {
                     <div className="mt-4 space-y-4">
                         {filteredPrograms.map(program => (
                             <div key={program.id} className="p-4 border border-gray-100 rounded-lg shadow-lg bg-white relative">
-                                <ProgramDetails program={program} user={user} />
+                                <ProgramDetails program={program} user={user} actions={actions} setActions={setActions} />
                             </div>
                         ))}
                     </div>
@@ -100,32 +160,48 @@ function Home() {
                 {/* Friends and Groups Section */}
                 <div className="lg:w-1/3 lg:pl-4 mt-8 lg:mt-0 space-y-8">
                     <div className="bg-gray-100 rounded-lg shadow-lg max-h-96 overflow-y-auto relative mt-5">
-                        <div className="sticky top-0 bg-white p-4 z-10">
+                        <div className="sticky top-0 bg-white p-4 z-8">
                             <h2 className="text-2xl font-bold mb-4">Ajouter des amis</h2>
                         </div>
+
                         <div className="p-4">
                             {users.map(friend => (
-                                <div key={friend.id} className="flex items-center mb-4 p-2 border rounded bg-gray-100">
+                                <div key={friend.id}
+                                     className="flex flex-col sm:flex-row items-center mb-4 p-2 border rounded bg-gray-100">
                                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white">
-                                        <img src={friend.profile_picture || loginicon} alt="Profile" className="w-full h-full object-cover" />
+                                        <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                                                <span
+                                                    className="text-lg text-gray-600">{friend.first_name.charAt(0)}</span>
+                                        </div>
                                     </div>
-                                    <div className="ml-4">
+                                    <div className="ml-0 sm:ml-4 mt-2 sm:mt-0 text-center sm:text-left">
                                         <p className="font-bold">{friend.first_name} {friend.last_name}</p>
-                                        <p className="text-sm text-gray-600">{friend.first_name}</p>
+                                        <p className="text-sm text-gray-600">{friend.email}</p>
+                                        <p className="text-sm text-gray-600">{friend.username}</p>
                                     </div>
-                                    <button
-                                        onClick={() => handleAddFriend(friend.id)}
-                                        className="flex items-center bg-blue-500 text-white px-3 py-1 ml-auto rounded hover:bg-blue-700"
-                                    >
-                                        <FaUserPlus className="mr-2" /> Ajouter
-                                    </button>
+                                    {sentRequests.includes(friend.id) ? (
+                                        <button
+                                            className="flex items-center bg-gray-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded"
+                                            disabled
+                                        >
+                                            Invitation envoyée
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleAddFriend(friend.id)}
+                                            className="flex items-center bg-blue-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded hover:bg-blue-700"
+                                        >
+                                            <FaUserPlus className="mr-2"/> Ajouter
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>
                     </div>
 
+
                     <div className="bg-gray-100 rounded shadow-lg max-h-96 overflow-y-auto relative">
-                        <div className="sticky top-0 bg-white p-4 z-10">
+                        <div className="sticky top-0 bg-white p-4 z-8">
                             <h2 className="text-2xl font-bold mb-4">Liste des groupes</h2>
                         </div>
                         <div className="p-4">
@@ -139,13 +215,58 @@ function Home() {
                             ))}
                         </div>
                     </div>
+
+                    <div className="bg-gray-100 rounded shadow-lg max-h-96 overflow-y-auto relative">
+                        <div className="sticky top-0 bg-white p-4 z-8">
+                            <h2 className="text-2xl font-bold mb-4">Gérer les demandes d'amis</h2>
+                        </div>
+                        <div className="p-4">
+                            {requests.map(request => (
+                                <div key={request.id} className="flex items-center mb-4 p-2 border rounded bg-gray-100">
+                                    <div className="w-10 h-10 rounded-full overflow-hidden border border-white">
+                                        <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                                            <span
+                                                className="text-lg text-gray-600">{request.user === user.id ? request.friend : request.user}</span>
+                                        </div>
+                                    </div>
+                                    <div className="ml-4">
+                                        <p className="font-bold">{users.find(u => u.id === request.user)?.first_name} {users.find(u => u.id === request.user)?.last_name}</p>
+                                        <p className="text-sm text-gray-600">{users.find(u => u.id === request.user)?.email}</p>
+                                    </div>
+                                    {request.status === 'sent' && request.user !== user.id ? (
+                                        <div className="flex space-x-2 ml-auto">
+                                            <button
+                                                onClick={() => handleAcceptRequest(request.id)}
+                                                className="flex items-center bg-green-500 text-white px-3 py-1 rounded hover:bg-green-700"
+                                            >
+                                                Accepter
+                                            </button>
+                                            <button
+                                                onClick={() => handleRejectRequest(request.id)}
+                                                className="flex items-center bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700"
+                                            >
+                                                Refuser
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            className="flex items-center bg-gray-500 text-white px-3 py-1 ml-auto rounded"
+                                            disabled
+                                        >
+                                            Invitation envoyée
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
 
-const ProgramDetails = ({ program, user }) => {
+const ProgramDetails = ({program, user, actions, setActions}) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null);
@@ -221,7 +342,7 @@ const ProgramDetails = ({ program, user }) => {
         if (!editCommentId) return;
 
         try {
-            await updateComment(editCommentId, { text: newComment });
+            await updateComment(editCommentId, {text: newComment});
             setNewComment('');
             setEditCommentId(null);
             fetchComments();
@@ -238,6 +359,31 @@ const ProgramDetails = ({ program, user }) => {
             console.error("Error deleting comment", error);
         }
     };
+
+    const handleAction = async (type, entityId, entity) => {
+        const existingAction = actions.find(action => action.type === type && action.user === user.id && action[entity] === entityId);
+        if (existingAction) {
+            try {
+                await deleteAction(existingAction.id);
+                setActions(actions.filter(action => action.id !== existingAction.id));
+            } catch (error) {
+                console.error("Error deleting action", error);
+            }
+        } else {
+            try {
+                const response = await createAction({
+                    type,
+                    [entity]: entityId,
+                    user: user.id
+                });
+                setActions([...actions, response.data]);
+            } catch (error) {
+                console.error("Error creating action", error);
+            }
+        }
+    };
+
+    const countActions = (type, entityId, entity) => actions.filter(action => action.type === type && action[entity] === entityId).length;
 
     return (
         <>
@@ -258,10 +404,50 @@ const ProgramDetails = ({ program, user }) => {
                 <FilePreview fileUrl={program.file} />
             )}
             <div className="flex items-center mt-2 space-x-2">
-                <IconToggle icon={FaRegHeart} activeIcon={FaHeart} activeColor="text-red-500" size="1rem" actionType="love" programId={program.id} />
-                <IconToggle icon={GoThumbsup} activeIcon={GoThumbsup} activeColor="text-blue-500" size="1rem" actionType="like" programId={program.id} />
-                <IconToggle icon={GoThumbsdown} activeIcon={GoThumbsdown} activeColor="text-blue-500" size="1rem" actionType="like" programId={program.id} />
-                <IconToggle icon={GoShareAndroid} activeIcon={GoShareAndroid} activeColor="text-green-500" size="1rem" actionType="share" programId={program.id} isVisible={program.is_visible} />
+                <IconToggle
+                    icon={FaRegHeart}
+                    activeIcon={FaHeart}
+                    activeColor="text-red-500"
+                    size="1rem"
+                    actionType="love"
+                    entityId={program.id}
+                    entity="program"
+                    count={countActions('love', program.id, 'program')}
+                    handleAction={handleAction}
+                />
+                <IconToggle
+                    icon={GoThumbsup}
+                    activeIcon={GoThumbsup}
+                    activeColor="text-blue-500"
+                    size="1rem"
+                    actionType="like"
+                    entityId={program.id}
+                    entity="program"
+                    count={countActions('like', program.id, 'program')}
+                    handleAction={handleAction}
+                />
+                <IconToggle
+                    icon={GoThumbsdown}
+                    activeIcon={GoThumbsdown}
+                    activeColor="text-blue-500"
+                    size="1rem"
+                    actionType="unlike"
+                    entityId={program.id}
+                    entity="program"
+                    count={countActions('unlike', program.id, 'program')}
+                    handleAction={handleAction}
+                />
+                <IconToggle
+                    icon={GoShareAndroid}
+                    activeIcon={GoShareAndroid}
+                    activeColor="text-green-500"
+                    size="1rem"
+                    actionType="share"
+                    entityId={program.id}
+                    entity="program"
+                    count={countActions('share', program.id, 'program')}
+                    handleAction={handleAction}
+                />
             </div>
             {program.authorId === user.id && (
                 <div className="absolute top-2 right-2">
@@ -276,6 +462,11 @@ const ProgramDetails = ({ program, user }) => {
                         handleReply={handleReply}
                         handleEditComment={handleEditComment}
                         handleDeleteComment={handleDeleteComment}
+                        user={user}
+                        actions={actions}
+                        setActions={setActions}
+                        handleAction={handleAction}
+                        countActions={countActions}
                     />
                 ))}
             </div>
@@ -296,7 +487,23 @@ const ProgramDetails = ({ program, user }) => {
     );
 };
 
-const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment }) => {
+const IconToggle = ({ icon: Icon, activeIcon: ActiveIcon, activeColor, size, actionType, entityId, entity, count, handleAction }) => {
+    const [active, setActive] = useState(false);
+
+    const handleToggle = async () => {
+        setActive(!active);
+        await handleAction(actionType, entityId, entity);
+    };
+
+    return (
+        <div className="flex items-center cursor-pointer" onClick={handleToggle}>
+            {active ? <ActiveIcon className={activeColor} style={{ fontSize: size }} /> : <Icon className="text-gray-500" style={{ fontSize: size }} />}
+            <span className="ml-1">{count}</span>
+        </div>
+    );
+};
+
+const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment, user, actions, setActions, handleAction, countActions }) => {
     const [author, setAuthor] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
@@ -334,7 +541,8 @@ const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment 
             )}
             <p className="text-gray-700">{comment.text}</p>
             <div className="absolute top-2 right-2">
-                <FaEllipsisV className="cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)} />
+                {author && comment.author_id === user.id && (
+                    <FaEllipsisV className="cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)} />)}
                 {isMenuOpen && (
                     <div ref={menuRef} className="absolute right-0 mt-2 w-32 bg-white border border-gray-300 rounded shadow-lg">
                         <button
@@ -359,43 +567,91 @@ const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment 
                 )}
             </div>
             <div className="flex items-center mt-2 space-x-2">
-                <IconToggle icon={FaRegHeart} activeIcon={FaHeart} activeColor="text-red-500" size="1rem" actionType="love" commentId={comment.id} />
-                <IconToggle icon={GoThumbsup} activeIcon={GoThumbsup} activeColor="text-blue-500" size="1rem" actionType="like" commentId={comment.id} />
-                <IconToggle icon={GoThumbsdown} activeIcon={GoThumbsdown} activeColor="text-blue-500" size="1rem" actionType="like" commentId={comment.id} />
+                <IconToggle
+                    icon={FaRegHeart}
+                    activeIcon={FaHeart}
+                    activeColor="text-red-500"
+                    size="1rem"
+                    actionType="love"
+                    entityId={comment.id}
+                    entity="comment"
+                    count={countActions('love', comment.id, 'comment')}
+                    handleAction={handleAction}
+                />
+                <IconToggle
+                    icon={GoThumbsup}
+                    activeIcon={GoThumbsup}
+                    activeColor="text-blue-500"
+                    size="1rem"
+                    actionType="like"
+                    entityId={comment.id}
+                    entity="comment"
+                    count={countActions('like', comment.id, 'comment')}
+                    handleAction={handleAction}
+                />
+                <IconToggle
+                    icon={GoThumbsdown}
+                    activeIcon={GoThumbsdown}
+                    activeColor="text-blue-500"
+                    size="1rem"
+                    actionType="unlike"
+                    entityId={comment.id}
+                    entity="comment"
+                    count={countActions('unlike', comment.id, 'comment')}
+                    handleAction={handleAction}
+                />
                 <button onClick={() => handleReply(comment)} className="text-blue-500 flex items-center">
                     <GoReply className="mr-1" /> Replier
                 </button>
             </div>
             {comment.replies && comment.replies.map(reply => (
                 <div key={reply.id} className="ml-8 mt-2">
-                    <Comment comment={reply} handleReply={handleReply} handleEditComment={handleEditComment} handleDeleteComment={handleDeleteComment} />
+                    <Comment comment={reply} handleReply={handleReply} handleEditComment={handleEditComment} handleDeleteComment={handleDeleteComment} user={user} actions={actions} setActions={setActions} handleAction={handleAction} countActions={countActions} />
                 </div>
             ))}
         </div>
     );
 };
 
-const IconToggle = ({ icon: Icon, activeIcon: ActiveIcon, activeColor, size, actionType, programId, commentId }) => {
-    const [active, setActive] = useState(false);
+const FilePreview = ({ fileUrl }) => {
+    const [content, setContent] = useState('');
 
-    const handleToggle = async () => {
-        const newActive = !active;
-        setActive(newActive);
-
+    const fetchFileContent = async (fileUrl) => {
         try {
-            await createAction({
-                action: actionType,
-                program: programId,
-                comment: commentId
-            });
+            const response = await fetch(fileUrl);
+            const text = await response.text();
+            return text;
         } catch (error) {
-            console.error("Error creating action", error);
+            console.error("Error fetching file content", error);
+            return "Unable to load file content.";
         }
     };
 
+    useEffect(() => {
+        const loadFileContent = async () => {
+            const fileContent = await fetchFileContent(fileUrl);
+            setContent(fileContent);
+        };
+        loadFileContent();
+    }, [fileUrl]);
+
     return (
-        <div onClick={handleToggle} className="cursor-pointer">
-            {active ? <ActiveIcon className={activeColor} style={{ fontSize: size }} /> : <Icon className="text-gray-500" style={{ fontSize: size }} />}
+        <div className="mt-4">
+            <div className="border rounded p-2 text-gray-500">
+                <p>File Preview:</p>
+                <div className="mt-2">
+                    <Editor
+                        height="20vh"
+                        language="javascript"
+                        theme="vs-dark"
+                        value={content}
+                        options={{
+                            readOnly: true,
+                            automaticLayout: true,
+                        }}
+                    />
+                </div>
+            </div>
         </div>
     );
 };
@@ -456,47 +712,7 @@ const Menu = ({ programId }) => {
     );
 };
 
-const FilePreview = ({ fileUrl }) => {
-    const [content, setContent] = useState('');
 
-    const fetchFileContent = async (fileUrl) => {
-        try {
-            const response = await fetch(fileUrl);
-            const text = await response.text();
-            return text;
-        } catch (error) {
-            console.error("Error fetching file content", error);
-            return "Unable to load file content.";
-        }
-    };
 
-    useEffect(() => {
-        const loadFileContent = async () => {
-            const fileContent = await fetchFileContent(fileUrl);
-            setContent(fileContent);
-        };
-        loadFileContent();
-    }, [fileUrl]);
-
-    return (
-        <div className="mt-4">
-            <div className="border rounded p-2 text-gray-500">
-                <p>File Preview:</p>
-                <div className="mt-2">
-                    <Editor
-                        height="20vh"
-                        language="javascripte"
-                        theme="vs-dark"
-                        value={content}
-                        options={{
-                            readOnly: true,
-                            automaticLayout: true,
-                        }}
-                    />
-                </div>
-            </div>
-        </div>
-    );
-};
 
 export default Home;

@@ -8,27 +8,18 @@ baseUrl.interceptors.request.use((config) => {
     return config;
 });
 
-
-export const sendFriendRequest = (userId, friendId) => {
-    return baseUrl.post(`/friendship/request/`, { user_id: userId, friend_id: friendId });
+export const sendFriendRequest = (friendId) => {
+    return baseUrl.post(`/add_friend/`, { friend_id: friendId });
 };
 
-export const acceptFriendRequest = (friendshipId) => {
-    return baseUrl.put(`/friendship/accept/${friendshipId}/`);
+export const listFriends = () => {
+    return baseUrl.get(`/friends/`);
 };
 
-export const rejectFriendRequest = (friendshipId) => {
-    return baseUrl.put(`/friendship/reject/${friendshipId}/`);
+export const listFriendRequests = () => {
+    return baseUrl.get(`/friendships/`);
 };
 
-export const removeFriend = (friendshipId) => {
-    return baseUrl.delete(`/friendship/remove/${friendshipId}/`);
-};
-
-export const getPendingFriendRequests = (userId) => {
-    return baseUrl.get(`/friendship/pending/${userId}/`);
-};
-
-export const getAllFriends = (userId) => {
-    return baseUrl.get(`/friendship/friends/${userId}/`);
+export const manageFriendRequest = (friendId, action) => {
+    return baseUrl.post(`/manage_friend_request/${friendId}/${action}/`);
 };
