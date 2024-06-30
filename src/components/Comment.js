@@ -99,10 +99,10 @@ const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment,
                         activeIcon={GoThumbsdown}
                         activeColor="text-blue-500"
                         size="1rem"
-                        actionType="unlike"
+                        actionType="dislike"
                         entityId={comment.id}
                         entity="comment"
-                        count={countActions('unlike', comment.id, 'comment')}
+                        count={countActions('dislike', comment.id, 'comment')}
                         handleAction={handleAction}
                     />
                     <button onClick={() => handleReply(comment)} className="text-blue-500 flex items-center">

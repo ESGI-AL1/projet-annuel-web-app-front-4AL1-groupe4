@@ -6,17 +6,19 @@ import { GoReply, GoShareAndroid, GoThumbsup, GoThumbsdown } from 'react-icons/g
 import loginicon from "../assets/photos/user.png";
 import IconToggle from './IconToggle';
 import Comment from './Comment';
-import Menu from './Menu';
 import FilePreview from './FilePreview';
-import { createAction, deleteAction } from "../services/api.action";
+import { getActions, createAction, deleteAction } from "../services/api.action";
 import { deleteProgram, updateProgram } from "../services/api.program";
 
-const ProgramDetails = ({ program, user, actions, setActions }) => {
+const ProgramDetails = ({ program, user }) => {
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null);
     const [editCommentId, setEditCommentId] = useState(null);
     const [author, setAuthor] = useState(null);
+    const [actions, setActions] = useState([]);
+    const [programActionCounts, setProgramActionCounts] = useState({});
+    const [commentActionCounts, setCommentActionCounts] = useState({});
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const commentInputRef = useRef(null);
     const menuRef = useRef(null);
@@ -25,6 +27,7 @@ const ProgramDetails = ({ program, user, actions, setActions }) => {
         if (program) {
             fetchComments();
             fetchAuthor();
+            fetchActions();
         }
     }, [program]);
 
@@ -59,6 +62,57 @@ const ProgramDetails = ({ program, user, actions, setActions }) => {
         } catch (error) {
             console.error("Error fetching author information", error);
         }
+    };
+
+    const fetchActions = async () => {
+        try {
+            const response = await getActions();
+            console.log('Fetched actions:', response.data); // Debugging line
+            setActions(response.data);
+            updateActionCounts(response.data);
+        } catch (error) {
+            console.error("Error fetching actions", error);
+        }
+    };
+
+    const updateActionCounts = (actions) => {
+        const programCounts = {};
+        const commentCounts = {};
+
+        actions.forEach(action => {
+            const entity = action.program_id ? 'program' : 'comment';
+            const entityId = action.program_id || action.comment_id;
+            const actionType = action.action;
+
+            if (entity === 'program') {
+                if (!programCounts[entityId]) {
+                    programCounts[entityId] = {
+                        like: 0,
+                        dislike: 0,
+                        share: 0,
+                        unshare: 0,
+                        love: 0,
+                        unlove: 0
+                    };
+                }
+                programCounts[entityId][actionType]++;
+            } else if (entity === 'comment') {
+                if (!commentCounts[entityId]) {
+                    commentCounts[entityId] = {
+                        like: 0,
+                        dislike: 0,
+                        share: 0,
+                        unshare: 0,
+                        love: 0,
+                        unlove: 0
+                    };
+                }
+                commentCounts[entityId][actionType]++;
+            }
+        });
+
+        setProgramActionCounts(programCounts);
+        setCommentActionCounts(commentCounts);
     };
 
     const handleAddComment = async () => {
@@ -125,7 +179,8 @@ const ProgramDetails = ({ program, user, actions, setActions }) => {
     };
 
     const handleAction = async (type, entityId, entity) => {
-        const existingAction = actions.find(action => action.type === type && action.user === user.id && action[entity] === entityId);
+        console.log('Handling action:', type, entityId, entity); // Debugging line
+        const existingAction = actions.find(action => action.action === type && action.author_id === user.id && action[entity] === entityId);
         if (existingAction) {
             try {
                 await deleteAction(existingAction.id);
@@ -135,19 +190,38 @@ const ProgramDetails = ({ program, user, actions, setActions }) => {
             }
         } else {
             try {
-                const response = await createAction({
-                    type,
-                    [entity]: entityId,
-                    user: user.id
-                });
+                const actionData = {
+                    action: type,
+                    author_id: user.id
+                };
+                if (entity === 'program') {
+                    actionData.program_id = entityId;
+                } else if (entity === 'comment') {
+                    actionData.comment_id = entityId;
+                }
+                const response = await createAction(actionData);
                 setActions([...actions, response.data]);
             } catch (error) {
                 console.error("Error creating action", error);
             }
         }
+        await fetchActions(); // Refresh actions after any update
     };
 
-    const countActions = (type, entityId, entity) => actions.filter(action => action.type === type && action[entity] === entityId).length;
+    const countActions = (type, entityId, entity) => {
+        if (entity === 'program') {
+            if (!programActionCounts[entityId]) {
+                return 0;
+            }
+            return programActionCounts[entityId][type] || 0;
+        } else if (entity === 'comment') {
+            if (!commentActionCounts[entityId]) {
+                return 0;
+            }
+            return commentActionCounts[entityId][type] || 0;
+        }
+        return 0;
+    };
 
     const handleDeleteProgram = async (programId) => {
         try {
@@ -199,7 +273,6 @@ const ProgramDetails = ({ program, user, actions, setActions }) => {
                     handleDeleteComment={handleDeleteComment}
                     user={user}
                     actions={actions}
-                    setActions={setActions}
                     handleAction={handleAction}
                     countActions={countActions}
                 />
@@ -283,10 +356,10 @@ const ProgramDetails = ({ program, user, actions, setActions }) => {
                     activeIcon={GoThumbsdown}
                     activeColor="text-blue-500"
                     size="1rem"
-                    actionType="unlike"
+                    actionType="dislike"
                     entityId={program.id}
                     entity="program"
-                    count={countActions('unlike', program.id, 'program')}
+                    count={countActions('dislike', program.id, 'program')}
                     handleAction={handleAction}
                 />
                 <IconToggle
