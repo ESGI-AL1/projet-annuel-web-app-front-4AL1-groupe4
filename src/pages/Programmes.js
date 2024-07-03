@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import { FaEllipsisV, FaEdit, FaTrash, FaShareSquare } from 'react-icons/fa';
-import { getPrograms, deleteProgram, updateProgram } from '../services/api.program'; // Assurez-vous d'importer correctement vos services
+import { getPrograms, deleteProgram, updateProgram } from '../services/api.program';
+import FilePreview from '../components/FilePreview'; // Assurez-vous d'importer correctement FilePreview
 
 const Programmes = () => {
     const [programs, setPrograms] = useState([]);
     const [filteredPrograms, setFilteredPrograms] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const navigate = useNavigate(); // Initialize useNavigate
 
     useEffect(() => {
         fetchPrograms();
@@ -31,8 +34,10 @@ const Programmes = () => {
     };
 
     const handleEditProgram = (programId) => {
-        console.log("Edit program with ID:", programId);
-        // Logic to edit program goes here
+        const program = programs.find(p => p.id === programId);
+        if (program) {
+            navigate('/editor', { state: { program } }); // Navigate to the editor with program data
+        }
     };
 
     const handleDeleteProgram = async (programId) => {
@@ -72,10 +77,7 @@ const Programmes = () => {
                             <p className="text-gray-700">{program.description}</p>
                             {program.file && (
                                 <div className="mt-4">
-                                    <div className="border rounded p-2 text-gray-500">
-                                        <p>File Preview:</p>
-                                        <a href={program.file} target="_blank" rel="noopener noreferrer">View File</a>
-                                    </div>
+                                    <FilePreview fileUrl={program.file} />
                                 </div>
                             )}
                             <div className="absolute top-2 right-2">

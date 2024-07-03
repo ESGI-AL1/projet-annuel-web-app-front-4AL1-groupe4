@@ -38,6 +38,8 @@ function LoginPage() {
 				localStorage.removeItem('token');
 				setUser(null);
 				navigate('/login');
+				window.location.reload()
+
 			}, timeRemaining * 1000);
 			navigate('/home');
 		} catch (error) {
@@ -84,6 +86,7 @@ function LoginPage() {
 				localStorage.removeItem('token');
 				setUser(null);
 				navigate('/login');
+				window.location.reload()
 			}, timeRemaining * 1000);
 			navigate('/home');
 		} catch (loginError) {
@@ -107,6 +110,7 @@ function LoginPage() {
 						localStorage.removeItem('token');
 						setUser(null);
 						navigate('/login');
+						window.location.reload()
 					}, timeRemaining * 1000);
 					navigate('/home');
 				} catch (createUserError) {

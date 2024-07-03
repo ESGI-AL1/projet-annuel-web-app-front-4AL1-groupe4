@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { saveAs } from 'file-saver';
 import { Editor } from '@monaco-editor/react';
-import { createProgram } from '../services/api.program';
+import { createProgram, updateProgram, runProgram } from '../services/api.program';
 import { PiRocketLaunchLight } from 'react-icons/pi';
 import { CiExport } from 'react-icons/ci';
 import { CgCompressLeft } from 'react-icons/cg';
@@ -13,15 +14,61 @@ import { FcCancel } from 'react-icons/fc';
 import { IoMdAttach } from "react-icons/io";
 
 const MyEditor = () => {
-    const [code, setCode] = useState('// Place your code here');
+    const location = useLocation();
+    const program = location.state?.program || null;
+
+    const [code, setCode] = useState(program ? '' : '// Place your code here');
     const [language, setLanguage] = useState('javascript');
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [result, setResult] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
+    const [title, setTitle] = useState(program ? program.title : '');
+    const [description, setDescription] = useState(program ? program.description : '');
     const [fileName, setFileName] = useState('');
+    const [inputFileType, setInputFileType] = useState(program ? program.input_type : '.txt');
+    const [outputFileType, setOutputFileType] = useState(program ? program.output_type : '.txt');
+    const [isVisible, setIsVisible] = useState(program ? program.isVisible : true);
     const fileInputRef = useRef(null);
+
+    const fileTypes = ['.txt', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.json', '.xml', '.html', '.js', '.py', '.java', '.png', '.jpg', '.jpeg', '.gif'];
+
+    useEffect(() => {
+        if (program && program.file) {
+            fetchFileContent(program.file);
+            const fileExtension = getFileExtension(program.file);
+            setLanguageFromExtension(fileExtension);
+        }
+    }, [program]);
+
+    const fetchFileContent = async (fileUrl) => {
+        try {
+            const response = await fetch(fileUrl);
+            const text = await response.text();
+            setCode(text);
+        } catch (error) {
+            console.error("Error fetching file content", error);
+        }
+    };
+
+    const getFileExtension = (filename) => {
+        return filename.split('.').pop();
+    };
+
+    const setLanguageFromExtension = (extension) => {
+        switch (extension) {
+            case 'js':
+                setLanguage('javascript');
+                break;
+            case 'py':
+                setLanguage('python');
+                break;
+            case 'java':
+                setLanguage('java');
+                break;
+            default:
+                setLanguage('text');
+        }
+    };
 
     const handleLanguageChange = (event) => {
         setLanguage(event.target.value);
@@ -79,10 +126,17 @@ const MyEditor = () => {
         formData.append('file', file, `program.${extension}`);
         formData.append('title', title);
         formData.append('description', description);
+        formData.append('input_type', inputFileType);
+        formData.append('output_type', outputFileType);
+        formData.append('isVisible', isVisible);
 
         try {
-            const response = await createProgram(formData);
-            setResult(response.data.result); // Assuming the API returns the result in this format
+            if (program) {
+                await updateProgram(program.id, formData);
+            } else {
+                await createProgram(formData);
+            }
+            setResult('Program successfully deployed!');
         } catch (error) {
             console.error('Error deploying program:', error);
             setResult('Error deploying program.');
@@ -97,11 +151,43 @@ const MyEditor = () => {
         const file = event.target.files[0];
         if (file) {
             setFileName(file.name);
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                setCode(e.target.result);
-            };
-            reader.readAsText(file);
+        }
+    };
+
+    const handleRun = async () => {
+        if (!fileName) {
+            setResult("Please select a file before executing.");
+            return;
+        }
+
+        const formData = new FormData();
+        const scriptFile = new Blob([code], { type: 'text/plain' });
+        const inputFile = fileInputRef.current.files[0];
+
+        let extension = '';
+        switch (language) {
+            case 'javascript':
+                extension = 'js';
+                break;
+            case 'python':
+                extension = 'py';
+                break;
+            case 'java':
+                extension = 'java';
+                break;
+            default:
+                extension = 'txt';
+        }
+
+        formData.append('script_file', scriptFile, `script.${extension}`);
+        formData.append('input_file', inputFile);
+
+        try {
+            const response = await runProgram(formData);
+            setResult(`Program executed successfully! Result: ${response.data.file_url}`);
+        } catch (error) {
+            console.error('Error executing program:', error);
+            setResult(`Error executing program: ${error.response?.data?.error || error.message}`);
         }
     };
 
@@ -120,7 +206,8 @@ const MyEditor = () => {
                 </select>
                 <div className="flex items-center gap gap-4">
                     <VscRunAll
-                        title="Execute"
+                        title="Run"
+                        onClick={handleRun}
                         className="text-2xl cursor-pointer hover:text-gray-400 ml-4"
                     />
                     <PiRocketLaunchLight
@@ -171,7 +258,7 @@ const MyEditor = () => {
             <div className="flex flex-row items-start justify-center w-full">
                 <Editor
                     width="100%"
-                    height="75vh"
+                    height="60vh"
                     language={language}
                     theme="vs-dark"
                     value={code}
@@ -184,7 +271,7 @@ const MyEditor = () => {
             </div>
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75">
-                    <div className="bg-gray-800 text-white rounded-lg p-8 w-1/3">
+                    <div className="bg-gray-800 text-white rounded-lg p-8 w-11/12 md:w-1/2 lg:w-1/3">
                         <h2 className="text-2xl mb-4">Deploy Program</h2>
                         <input
                             type="text"
@@ -200,6 +287,26 @@ const MyEditor = () => {
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                         />
+                        <label className="block mb-2">Input File Type</label>
+                        <select
+                            value={inputFileType}
+                            onChange={(e) => setInputFileType(e.target.value)}
+                            className="w-full p-2 mb-4 bg-gray-900 border border-gray-700 rounded"
+                        >
+                            {fileTypes.map((type) => (
+                                <option key={type} value={type}>{type}</option>
+                            ))}
+                        </select>
+                        <label className="block mb-2">Output File Type</label>
+                        <select
+                            value={outputFileType}
+                            onChange={(e) => setOutputFileType(e.target.value)}
+                            className="w-full p-2 mb-4 bg-gray-900 border border-gray-700 rounded"
+                        >
+                            {fileTypes.map((type) => (
+                                <option key={type} value={type}>{type}</option>
+                            ))}
+                        </select>
                         <div className="flex justify-end space-x-4">
                             <button
                                 onClick={() => setIsModalOpen(false)}

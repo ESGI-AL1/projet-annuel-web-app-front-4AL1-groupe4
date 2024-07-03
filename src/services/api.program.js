@@ -25,3 +25,17 @@ export const executeProgram = (formData) => baseUrl.post("/execute/", formData, 
         'Content-Type': 'multipart/form-data'
     }
 });
+
+export const runProgram = (formData) => baseUrl.post("/run/", formData, {
+    headers: {
+        'Content-Type': 'multipart/form-data'
+    }
+});
+
+export const createPipeline = (formData) => {
+    return baseUrl.post('/api/pipeline/', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+};
