@@ -1,22 +1,12 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    FaGlobe,
-    FaMoon,
-} from "react-icons/fa";
-import { TbUsersGroup } from "react-icons/tb";
-import { TbUserEdit } from "react-icons/tb";
+import { FaGlobe, FaMoon, FaBars } from "react-icons/fa";
+import { TbUsersGroup, TbUserCog } from "react-icons/tb";
 import { RiUserFollowLine } from "react-icons/ri";
-
-
-
 import { googleLogout } from '@react-oauth/google';
-import loginicon from '../logo.svg';
-import { UserContext } from "../contexts/UserContext";
-import { GoFileCode, GoMail } from "react-icons/go";
+import { GoFileCode, GoMail, GoBell } from "react-icons/go";
 import { CiLogout } from "react-icons/ci";
-import { GoBell } from "react-icons/go";
-import { TbUserCog } from "react-icons/tb";
+import { UserContext } from "../contexts/UserContext";
 
 function Navbar() {
     const { user, setUser } = useContext(UserContext);
@@ -25,10 +15,11 @@ function Navbar() {
     const [darkMode, setDarkMode] = useState(false);
     const [language, setLanguage] = useState("fr");
     const [searchTerm, setSearchTerm] = useState('');
-    const [notifications, setNotifications] = useState([]); // État des notifications
-    const [messages, setMessages] = useState([]); // État des messages
-    const [hasNewNotification, setHasNewNotification] = useState(false); // État pour indiquer une nouvelle notification
-    const [hasNewMessage, setHasNewMessage] = useState(false); // État pour indiquer un nouveau message
+    const [notifications, setNotifications] = useState([]);
+    const [messages, setMessages] = useState([]);
+    const [hasNewNotification, setHasNewNotification] = useState(false);
+    const [hasNewMessage, setHasNewMessage] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const profileDropdownRef = useRef(null);
     const languageDropdownRef = useRef(null);
     const navigate = useNavigate();
@@ -50,7 +41,6 @@ function Navbar() {
     }, []);
 
     useEffect(() => {
-        // Simuler la récupération des notifications et des messages
         if (user) {
             setTimeout(() => {
                 const mockNotifications = [
@@ -107,7 +97,11 @@ function Navbar() {
 
     const handleMessagesClick = () => {
         setHasNewMessage(false);
-        navigate("/messages");
+        navigate("/chat");
+    };
+
+    const toggleMenu = () => {
+        setMenuOpen(!menuOpen);
     };
 
     return (
@@ -117,7 +111,7 @@ function Navbar() {
                     <a href="/" className="text-lg font-semibold" onClick={handleHomeClick}>
                         MonApp
                     </a>
-                    <div className="flex items-center space-x-4 ml-8 w-3/5">
+                    <div className="hidden md:flex items-center space-x-4 ml-8 w-3/5">
                         <input
                             type="text"
                             value={searchTerm}
@@ -132,7 +126,7 @@ function Navbar() {
                             Valider
                         </button>
                     </div>
-                    <div className="flex items-center ml-auto">
+                    <div className="hidden md:flex items-center ml-auto">
                         <div className="flex flex-row">
                             <a href="/home"
                                className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
@@ -183,13 +177,18 @@ function Navbar() {
                             </div>
                         )}
                         {user && (
-                            <div className="relative ml-4">
-                                <button onClick={handleMessagesClick} className="focus:outline-none">
-                                    <GoMail className="inline-block text-gray-400" style={{fontSize: '1.5rem'}}/>
-                                    {hasNewMessage && <span
-                                        className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
-                                </button>
+                            <div className="relative  flex flex-row items-center justify-between">
+                                <div className="relative ml-4 ">
+                                    <button onClick={handleMessagesClick} className="focus:outline-none">
+                                        <GoMail className="inline-block text-gray-400" style={{fontSize: '1.5rem'}}/>
+                                        {hasNewMessage && <span
+                                            className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
+                                    </button>
+                                </div>
+                                <a href="/Chat" onClick={handleMessagesClick}
+                                   className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Chat</a>
                             </div>
+
                         )}
                         {user && (
                             <>
@@ -198,7 +197,8 @@ function Navbar() {
                                         onMouseEnter={() => setProfileDropdownOpen(true)}
                                         className="focus:outline-none"
                                     >
-                                        <div className="w-10 h-10 rounded-full overflow-hidden flex justify-center items-center border border-white bg-gray-200">
+                                        <div
+                                            className="w-10 h-10 rounded-full overflow-hidden flex justify-center items-center border border-white bg-gray-200">
                                             <span
                                                 className="text-lg  text-center text-gray-600">{user.first_name.charAt(0)}{user.last_name.charAt(0)}</span>
 
@@ -233,7 +233,68 @@ function Navbar() {
                             </>
                         )}
                     </div>
+                    <div className="md:hidden flex items-center">
+                        <button onClick={toggleMenu} className="text-gray-400 hover:text-white focus:outline-none">
+                            <FaBars style={{ fontSize: '1.5rem' }} />
+                        </button>
+                    </div>
                 </div>
+                {menuOpen && (
+                    <div className="md:hidden mt-4 flex flex-col items-center space-y-4 bg-gray-800 w-full py-4">
+                        <input
+                            type="text"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            placeholder="Recherche..."
+                            className="p-2 border rounded border-gray-300"
+                        />
+                        <button
+                            onClick={handleSearch}
+                            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                        >
+                            Valider
+                        </button>
+                        <a href="/home"
+                           className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                           onClick={handleHomeClick}>Home</a>
+                        {!user && <a href="/login"
+                                     className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Login</a>}
+                        <a href="/editor"
+                           className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Editor</a>
+                        <a href="/pipeline"
+                           className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Pipeline</a>
+                        {user && (
+                            <>
+                                <button onClick={handleNotificationsClick} className="focus:outline-none">
+                                    <GoBell className="inline-block text-gray-400" style={{ fontSize: '1.5rem' }} />
+                                    {hasNewNotification && <span
+                                        className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
+                                </button>
+                                <button onClick={handleMessagesClick} className="focus:outline-none">
+                                    <GoMail className="inline-block text-gray-400" style={{ fontSize: '1.5rem' }} />
+                                    {hasNewMessage && <span
+                                        className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
+                                </button>
+                                <div className="flex flex-col items-center">
+                                    <a href="/profile"
+                                       className="block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center">
+                                        <TbUserCog className="mr-2" /> Modifier Profil
+                                    </a>
+                                    <a href="/programmes"
+                                       className="block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center">
+                                        <GoFileCode className="mr-2" /> Programmes
+                                    </a>
+                                    <button
+                                        onClick={handleSignOut}
+                                        className="w-full text-left block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center"
+                                    >
+                                        <CiLogout className="mr-2" /> Déconnexion
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                )}
             </nav>
 
             {/* Second Navbar */}
@@ -242,13 +303,13 @@ function Navbar() {
                     <div className="container mx-auto flex justify-end items-center space-x-4">
                         <button
                             onClick={() => navigate('/createGroupe')}
-                            className=" hover:bg-blue-400 text-black font-light py-2 border hover:border-white border-gray-300 px-7 rounded-md flex items-center"
+                            className="hover:bg-blue-400 text-black font-light py-2 border hover:border-white border-gray-300 px-7 rounded-md flex items-center"
                         >
                             <TbUsersGroup className="mr-2"/> Créer un groupe
                         </button>
                         <button
                             onClick={() => console.log("Liste des amis")}
-                            className="  hover:bg-blue-400 text-black font-light py-2 px-7 rounded-md hover:border-white  border border-gray-300 flex items-center"
+                            className="hover:bg-blue-400 text-black font-light py-2 px-7 rounded-md hover:border-white border border-gray-300 flex items-center"
                         >
                             <RiUserFollowLine className="mr-2 text-green-800 font-semibold inline-block"/> <span>Liste des amis</span>
                             <span

@@ -5,19 +5,24 @@ import { listFriends, listFriendRequests, manageFriendRequest } from "../service
 import ListeProgram from "../components/ListeProgram";
 import ListeFriend from "../components/ListeFriend";
 import ListeGroup from "../components/ListeGroup";
-
+import { useNavigate } from 'react-router-dom';
 
 function Home() {
     const { user } = useContext(UserContext);
     const [actions, setActions] = useState([]);
     const [friends, setFriends] = useState([]);
     const [requests, setRequests] = useState([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        fetchActions();
-        fetchFriends();
-        fetchRequests();
-    }, []);
+        if (user) {
+            fetchActions();
+            fetchFriends();
+            fetchRequests();
+        } else {
+            navigate('/home');
+        }
+    }, [user, navigate]);
 
     const fetchActions = async () => {
         try {
@@ -64,6 +69,10 @@ function Home() {
             console.error('Error rejecting friend request:', error);
         }
     };
+
+    if (!user) {
+        return null; // Return null or a loading indicator if user is not defined
+    }
 
     return (
         <div className="container mx-auto px-4 pt-32">

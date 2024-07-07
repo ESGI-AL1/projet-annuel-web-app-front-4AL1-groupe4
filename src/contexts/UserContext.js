@@ -10,22 +10,35 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      const decoded = jwtDecode(token);
-      getUserInformation(decoded.user_id).then(result => {
-        setUser(result.data);
-      }).catch(() => {
+      try {
+        const decoded = jwtDecode(token);
+        getUserInformation(decoded.user_id).then(result => {
+          setUser(result.data);
+        }).catch(() => {
+          localStorage.removeItem('token');
+        });
+      } catch (e) {
         localStorage.removeItem('token');
-      });
+      }
     }
   }, []);
 
-  const saveUser = (user) => {
+  const saveUser = (user, token) => {
     setUser(user);
     localStorage.setItem('user', JSON.stringify(user));
+    if (token) {
+      localStorage.setItem('token', token);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   return (
-      <UserContext.Provider value={{ user, setUser: saveUser }}>
+      <UserContext.Provider value={{ user, setUser: saveUser, logout }}>
         {children}
       </UserContext.Provider>
   );

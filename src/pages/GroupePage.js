@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AiOutlineUserAdd, AiOutlineMore } from 'react-icons/ai';
 import { getGroupById, deleteGroup } from '../services/api.groups';
+import {toast} from "react-toastify";
 
 function GroupePage() {
     const navigate = useNavigate();
@@ -12,12 +13,10 @@ function GroupePage() {
     useEffect(() => {
         const fetchGroup = async () => {
             try {
-                console.log('Fetching group with id:', id);
                 const response = await getGroupById(id);
-                console.log('Group data:', response.data);
                 setGroup(response.data);
             } catch (error) {
-                console.error('Erreur lors de la récupération du groupe', error);
+                toast.error('Erreur lors de la récupération du groupe', error);
             }
         };
         fetchGroup();

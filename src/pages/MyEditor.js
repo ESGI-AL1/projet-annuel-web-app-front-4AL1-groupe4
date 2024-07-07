@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, {useState, useRef, useEffect, useContext} from 'react';
 import { useLocation } from 'react-router-dom';
 import { saveAs } from 'file-saver';
 import { Editor } from '@monaco-editor/react';
@@ -12,11 +12,12 @@ import { CiSquareChevDown } from 'react-icons/ci';
 import { MdOutlineCloudDone } from 'react-icons/md';
 import { FcCancel } from 'react-icons/fc';
 import { IoMdAttach } from "react-icons/io";
+import {UserContext} from "../contexts/UserContext";
 
 const MyEditor = () => {
     const location = useLocation();
     const program = location.state?.program || null;
-
+    const { user } = useContext(UserContext);
     const [code, setCode] = useState(program ? '' : '// Place your code here');
     const [language, setLanguage] = useState('javascript');
     const [isFullScreen, setIsFullScreen] = useState(false);

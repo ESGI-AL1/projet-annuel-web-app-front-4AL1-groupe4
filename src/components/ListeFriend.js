@@ -2,12 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { getAllUsers } from "../services/api.user";
 import { sendFriendRequest, listFriendRequests, acceptFriendRequest, declineFriendRequest } from "../services/api.friendship";
 import { FaUserPlus, FaComments } from 'react-icons/fa';
+import {useNavigate} from "react-router-dom";
 
 const ListeFriend = ({ user }) => {
     const [users, setUsers] = useState([]);
     const [friendRequests, setFriendRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
+
 
     useEffect(() => {
         if (user) {
@@ -125,7 +128,9 @@ const ListeFriend = ({ user }) => {
                                     Invitation envoyée
                                 </button>
                             ) : status === 'accepted' ? (
-                                <button className="flex items-center bg-green-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded">
+                                <button className="flex items-center bg-green-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded"
+                                        onClick={() => navigate('/chat', { state: { friend: { name: 'Nom de l’utilisateur', id: friend.id } } })}
+                                >
                                     Ami
                                     <FaComments className="ml-2" />
                                 </button>

@@ -17,6 +17,7 @@ import { UserProvider } from './contexts/UserContext';
 import CreateGroupePage from "./pages/CreateGroupePage";
 import GroupePage from "./pages/GroupePage";
 import {initializeUsers} from "./utils/initializeUsers";
+import ChatPage from "./pages/ChatPage";
 
 function App() {
   useEffect(() => {
@@ -43,9 +44,9 @@ function App() {
                 <Route path="/programmes" element={<Programmes />} />
                 <Route path="/pipeline" element={<Pipeline />} />
                 <Route path="/createGroupe" element={<CreateGroupePage />} />
+                <Route path="/chat" element={<ChatPage />} />
                 <Route path="/groupePage" element={<GroupePage />} />
                 <Route path="/groupePage/:id" element={<GroupePage />} />
-
               </Route>
 
               <Route path="/forgot-password" element={<ForgotPassword />} />
