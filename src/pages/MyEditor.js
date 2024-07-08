@@ -32,6 +32,28 @@ const MyEditor = () => {
     const fileInputRef = useRef(null);
 
     const fileTypes = ['.txt', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.json', '.xml', '.html', '.js', '.py', '.java', '.png', '.jpg', '.jpeg', '.gif'];
+    const languages = [
+        {label: "JavaScript", value: "javascript"},
+        {label: "Python", value: "python"},
+        {label: "Java", value: "java"},
+        {label: "C", value: "c"},
+        {label: "C++", value: "cpp"},
+        {label: "C#", value: "csharp"},
+        {label: "Go", value: "go"},
+        {label: "HTML", value: "html"},
+        {label: "CSS", value: "css"},
+        {label: "Ruby", value: "ruby"},
+        {label: "PHP", value: "php"},
+        {label: "Swift", value: "swift"},
+        {label: "Kotlin", value: "kotlin"},
+        {label: "R", value: "r"},
+        {label: "TypeScript", value: "typescript"},
+        {label: "Rust", value: "rust"},
+        {label: "SQL", value: "sql"},
+        {label: "Perl", value: "perl"},
+        {label: "Scala", value: "scala"},
+        {label: "Shell", value: "shell"},
+    ];
 
     useEffect(() => {
         if (program && program.file) {
@@ -56,19 +78,29 @@ const MyEditor = () => {
     };
 
     const setLanguageFromExtension = (extension) => {
-        switch (extension) {
-            case 'js':
-                setLanguage('javascript');
-                break;
-            case 'py':
-                setLanguage('python');
-                break;
-            case 'java':
-                setLanguage('java');
-                break;
-            default:
-                setLanguage('text');
-        }
+        const languageMap = {
+            'js': 'javascript',
+            'py': 'python',
+            'java': 'java',
+            'c': 'c',
+            'cpp': 'cpp',
+            'cs': 'csharp',
+            'go': 'go',
+            'html': 'html',
+            'css': 'css',
+            'rb': 'ruby',
+            'php': 'php',
+            'swift': 'swift',
+            'kt': 'kotlin',
+            'r': 'r',
+            'ts': 'typescript',
+            'rs': 'rust',
+            'sql': 'sql',
+            'pl': 'perl',
+            'scala': 'scala',
+            'sh': 'shell'
+        };
+        setLanguage(languageMap[extension] || 'text');
     };
 
     const handleLanguageChange = (event) => {
@@ -79,22 +111,30 @@ const MyEditor = () => {
     const handleExport = () => {
         const fileName = prompt('Enter file name:');
         if (fileName) {
-            let extension = '';
-            switch (language) {
-                case 'javascript':
-                    extension = 'js';
-                    break;
-                case 'python':
-                    extension = 'py';
-                    break;
-                case 'java':
-                    extension = 'java';
-                    break;
-                default:
-                    extension = 'txt';
-            }
+            const extensionMap = {
+                'javascript': 'js',
+                'python': 'py',
+                'java': 'java',
+                'c': 'c',
+                'cpp': 'cpp',
+                'csharp': 'cs',
+                'go': 'go',
+                'html': 'html',
+                'css': 'css',
+                'ruby': 'rb',
+                'php': 'php',
+                'swift': 'swift',
+                'kotlin': 'kt',
+                'r': 'r',
+                'typescript': 'ts',
+                'rust': 'rs',
+                'sql': 'sql',
+                'perl': 'pl',
+                'scala': 'scala',
+                'shell': 'sh'
+            };
             const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
-            saveAs(blob, `${fileName}.${extension}`);
+            saveAs(blob, `${fileName}.${extensionMap[language] || 'txt'}`);
         }
     };
 
@@ -110,21 +150,29 @@ const MyEditor = () => {
         setIsModalOpen(false);
         const formData = new FormData();
         const file = new Blob([code], { type: 'text/plain' });
-        let extension = '';
-        switch (language) {
-            case 'javascript':
-                extension = 'js';
-                break;
-            case 'python':
-                extension = 'py';
-                break;
-            case 'java':
-                extension = 'java';
-                break;
-            default:
-                extension = 'txt';
-        }
-        formData.append('file', file, `program.${extension}`);
+        const extensionMap = {
+            'javascript': 'js',
+            'python': 'py',
+            'java': 'java',
+            'c': 'c',
+            'cpp': 'cpp',
+            'csharp': 'cs',
+            'go': 'go',
+            'html': 'html',
+            'css': 'css',
+            'ruby': 'rb',
+            'php': 'php',
+            'swift': 'swift',
+            'kotlin': 'kt',
+            'r': 'r',
+            'typescript': 'ts',
+            'rust': 'rs',
+            'sql': 'sql',
+            'perl': 'pl',
+            'scala': 'scala',
+            'shell': 'sh'
+        };
+        formData.append('file', file, `program.${extensionMap[language] || 'txt'}`);
         formData.append('title', title);
         formData.append('description', description);
         formData.append('input_type', inputFileType);
@@ -165,22 +213,30 @@ const MyEditor = () => {
         const scriptFile = new Blob([code], { type: 'text/plain' });
         const inputFile = fileInputRef.current.files[0];
 
-        let extension = '';
-        switch (language) {
-            case 'javascript':
-                extension = 'js';
-                break;
-            case 'python':
-                extension = 'py';
-                break;
-            case 'java':
-                extension = 'java';
-                break;
-            default:
-                extension = 'txt';
-        }
+        const extensionMap = {
+            'javascript': 'js',
+            'python': 'py',
+            'java': 'java',
+            'c': 'c',
+            'cpp': 'cpp',
+            'csharp': 'cs',
+            'go': 'go',
+            'html': 'html',
+            'css': 'css',
+            'ruby': 'rb',
+            'php': 'php',
+            'swift': 'swift',
+            'kotlin': 'kt',
+            'r': 'r',
+            'typescript': 'ts',
+            'rust': 'rs',
+            'sql': 'sql',
+            'perl': 'pl',
+            'scala': 'scala',
+            'shell': 'sh'
+        };
 
-        formData.append('script_file', scriptFile, `script.${extension}`);
+        formData.append('script_file', scriptFile, `script.${extensionMap[language] || 'txt'}`);
         formData.append('input_file', inputFile);
 
         try {
@@ -201,9 +257,9 @@ const MyEditor = () => {
                     onChange={handleLanguageChange}
                     className="bg-gray-700 text-white px-2 py-1 rounded focus:outline-none"
                 >
-                    <option value="javascript">JavaScript</option>
-                    <option value="python">Python</option>
-                    <option value="java">Java</option>
+                    {languages.map(lang => (
+                        <option key={lang.value} value={lang.value}>{lang.label}</option>
+                    ))}
                 </select>
                 <div className="flex items-center gap gap-4">
                     <VscRunAll

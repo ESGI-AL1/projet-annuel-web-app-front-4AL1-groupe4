@@ -159,8 +159,8 @@ function LoginPage() {
                             <Link to="/register" className="w-full text-sm text-blue-600 hover:underline"> S'inscrire</Link>
                         </span>
 					</div>
-					<div className=" flex flex-row mt-6">
-						<GoogleLogin className="w-full"
+					<div className=" flex flex-row mt-6 w-full">
+						<GoogleLogin className="w-full p-12"
 									 onSuccess={handleOAuthLogin}
 									 onError={() => console.log('Login Failed')}
 						>

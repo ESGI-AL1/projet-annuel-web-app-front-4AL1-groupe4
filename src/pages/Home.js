@@ -83,7 +83,7 @@ function Home() {
                 </div>
 
                 {/* Friends and Groups Section */}
-                <div className="lg:w-1/3 lg:pl-4 mt-8 lg:mt-0 space-y-8">
+                <div className="lg:w-5/8 lg:pl-4 mt-8 lg:mt-0 space-y-8">
                     <ListeFriend user={user} />
                     <ListeGroup />
                 </div>

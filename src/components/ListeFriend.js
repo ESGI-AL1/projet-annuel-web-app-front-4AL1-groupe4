@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getAllUsers } from "../services/api.user";
 import { sendFriendRequest, listFriendRequests, acceptFriendRequest, declineFriendRequest } from "../services/api.friendship";
 import { FaUserPlus, FaComments } from 'react-icons/fa';
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const ListeFriend = ({ user }) => {
     const [users, setUsers] = useState([]);
@@ -10,7 +10,6 @@ const ListeFriend = ({ user }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
-
 
     useEffect(() => {
         if (user) {
@@ -103,46 +102,48 @@ const ListeFriend = ({ user }) => {
                     const friendUserId = request ? request.user : null;
                     const friendFriendId = request ? request.friend : null;
                     return (
-                        <div key={friend.id} className="flex flex-col sm:flex-row items-center mb-4 p-2 border rounded bg-gray-100">
-                            <div className="w-10 h-10 rounded-full overflow-hidden border border-white">
+                        <div key={friend.id} className="flex items-center mb-4 p-2 border rounded bg-gray-100">
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-white flex-shrink-0">
                                 <div className="w-full h-full bg-gray-300 flex items-center justify-center">
                                     <span className="text-lg text-gray-600">{friend.first_name.charAt(0)}{friend.last_name.charAt(0)}</span>
                                 </div>
                             </div>
-                            <div className="ml-0 sm:ml-4 mt-2 sm:mt-0 text-center sm:text-left">
-                                <p className="font-bold">{friend.first_name} {friend.last_name}</p>
-                                <p className="text-sm text-gray-600">{friend.email}</p>
-                                <p className="text-sm text-gray-600">{friend.username}</p>
+                            <div className="ml-4 flex-grow">
+                                <p className="font-bold truncate w-full">{friend.first_name} {friend.last_name}</p>
+                                <p className="text-sm text-gray-600 truncate w-full">{friend.email}</p>
+                                <p className="text-sm text-gray-600 truncate w-full">{friend.username}</p>
                             </div>
-                            {status === 'sent' && friendFriendId === user.id ? (
-                                <>
-                                    <button onClick={() => handleAcceptFriend(friendshipId, friendUserId, friendFriendId)} className="flex items-center bg-green-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded hover:bg-green-700">
-                                        Accepter
+                            <div className="ml-4 flex space-x-2">
+                                {status === 'sent' && friendFriendId === user.id ? (
+                                    <>
+                                        <button onClick={() => handleAcceptFriend(friendshipId, friendUserId, friendFriendId)} className="flex items-center bg-green-500 text-white px-3 py-1 rounded hover:bg-green-700">
+                                            Accepter
+                                        </button>
+                                        <button onClick={() => handleDeclineFriend(friendshipId, friendUserId, friendFriendId)} className="flex items-center bg-red-500 text-white px-3 py-1 rounded hover:bg-red-700">
+                                            Rejeter
+                                        </button>
+                                    </>
+                                ) : status === 'sent' && friendUserId === user.id ? (
+                                    <button className="flex items-center bg-gray-500 text-white px-3 py-1 rounded" disabled>
+                                        Invitation envoyée
                                     </button>
-                                    <button onClick={() => handleDeclineFriend(friendshipId, friendUserId, friendFriendId)} className="flex items-center bg-red-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded hover:bg-red-700 ml-2">
-                                        Rejeter
+                                ) : status === 'accepted' ? (
+                                    <button className="flex items-center bg-green-500 text-white px-3 py-1 rounded"
+                                            onClick={() => navigate('/chat', { state: { friend: { name: 'Nom de l’utilisateur', id: friend.id } } })}
+                                    >
+                                        Ami
+                                        <FaComments className="ml-2" />
                                     </button>
-                                </>
-                            ) : status === 'sent' && friendUserId === user.id ? (
-                                <button className="flex items-center bg-gray-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded" disabled>
-                                    Invitation envoyée
-                                </button>
-                            ) : status === 'accepted' ? (
-                                <button className="flex items-center bg-green-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded"
-                                        onClick={() => navigate('/chat', { state: { friend: { name: 'Nom de l’utilisateur', id: friend.id } } })}
-                                >
-                                    Ami
-                                    <FaComments className="ml-2" />
-                                </button>
-                            ) : status === 'rejected' ? (
-                                <button className="flex items-center bg-red-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded" disabled>
-                                    Invitation rejetée
-                                </button>
-                            ) : (
-                                <button onClick={() => handleAddFriend(friend.id)} className="flex items-center bg-blue-500 text-white px-3 py-1 mt-2 sm:mt-0 ml-0 sm:ml-auto rounded hover:bg-blue-700">
-                                    <FaUserPlus className="mr-2" /> Ajouter
-                                </button>
-                            )}
+                                ) : status === 'rejected' ? (
+                                    <button className="flex items-center bg-red-500 text-white px-3 py-1 rounded" disabled>
+                                        Invitation rejetée
+                                    </button>
+                                ) : (
+                                    <button onClick={() => handleAddFriend(friend.id)} className="flex items-center bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-700">
+                                        <FaUserPlus className="mr-2" /> Ajouter
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     );
                 })}
