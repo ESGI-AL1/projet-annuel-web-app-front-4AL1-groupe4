@@ -33,7 +33,7 @@ export const runProgram = (formData) => baseUrl.post("/run/", formData, {
 });
 
 export const createPipeline = (formData) => {
-    return baseUrl.post('/api/pipeline/', formData, {
+    return baseUrl.post('/pipeline/', formData, {
         headers: {
             'Content-Type': 'multipart/form-data'
         }

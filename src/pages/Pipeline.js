@@ -1,5 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { FaTimes, FaFileAlt, FaPlus, FaTrash } from 'react-icons/fa';
+import { BsCloudDownload } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { UserContext } from '../contexts/UserContext';
@@ -13,7 +14,9 @@ const Pipeline = () => {
     const [selectedPrograms, setSelectedPrograms] = useState([]);
     const [inputFile, setInputFile] = useState(null);
     const [fileError, setFileError] = useState(null);
+    const [executionError, setExecutionError] = useState(null); // State for execution error
     const [searchTerm, setSearchTerm] = useState('');
+    const [fileUrl, setFileUrl] = useState(null); // State for file URL
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -41,11 +44,13 @@ const Pipeline = () => {
         if (selectedPrograms.length === 0) {
             setSelectedPrograms([program]);
             setFileError(null);
+            setExecutionError(null); // Reset execution error
         } else {
             const lastProgram = selectedPrograms[selectedPrograms.length - 1];
             if (lastProgram.output_type === program.input_type) {
                 setSelectedPrograms([...selectedPrograms, program]);
                 setFileError(null);
+                setExecutionError(null); // Reset execution error
             } else {
                 setFileError(`The output of the previous program does not match the input of ${program.title}`);
             }
@@ -56,7 +61,7 @@ const Pipeline = () => {
         const file = e.target.files[0];
         if (file) {
             const program = selectedPrograms[0];
-            const fileExtension = '.'+file.name.split('.').pop();
+            const fileExtension = '.' + file.name.split('.').pop();
 
             if (fileExtension === program.input_type) {
                 setInputFile(file);
@@ -75,10 +80,13 @@ const Pipeline = () => {
         if (inputFile && selectedPrograms.length > 0) {
             const formData = new FormData();
             formData.append('input_file', inputFile);
-            formData.append('programs', JSON.stringify(selectedPrograms.map(prog => prog.name)));
+            formData.append('programs', JSON.stringify(selectedPrograms.map(prog => prog.file.split('/').pop())));
 
             try {
-                await createPipeline(formData);
+                const response = await createPipeline(formData);
+                const fileUrl = response.data.file_url;
+                setFileUrl(fileUrl);
+                setExecutionError(null); // Reset execution error
                 Swal.fire({
                     icon: 'success',
                     title: 'Pipeline Created',
@@ -86,10 +94,11 @@ const Pipeline = () => {
                 });
             } catch (error) {
                 console.error("Error creating pipeline", error);
+                setExecutionError(error.response.data.error); // Set execution error
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'There was an error creating your pipeline. Please try again later.',
+                    text: 'There was an error creating your pipeline. Please check the error message in the drag-and-drop area.',
                 });
             }
         } else {
@@ -112,6 +121,15 @@ const Pipeline = () => {
         setSelectedPrograms([]);
         setInputFile(null);
         setFileError(null);
+        setFileUrl(null);
+        setExecutionError(null); // Reset execution error
+    };
+
+    const handleDownload = () => {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileUrl.split('/').pop();
+        link.click();
     };
 
     return (
@@ -162,7 +180,7 @@ const Pipeline = () => {
                 <div className="w-full flex items-center justify-between space-x-4 mt-8 mb-8">
                     <div className="flex items-center space-x-4">
                         {selectedPrograms.map((program, index) => (
-                            <div className="flex flex-row items-center space-x-4">
+                            <div className="flex flex-row items-center space-x-4" key={index}>
                                 <div className="flex flex-col items-center">
                                     {fileIcons[program.input_type] || <FaFileAlt className="text-4xl"/>}
                                     <span className="text-lg font-semibold">{program.title}</span>
@@ -198,17 +216,31 @@ const Pipeline = () => {
                     onDragOver={(e) => e.preventDefault()}
                 >
                     <div className="text-center">
-                        {selectedPrograms.length === 0 ? (
+                        {executionError ? (
+                            <p className="text-red-500">{executionError}</p>
+                        ) : selectedPrograms.length === 0 ? (
                             <p className="text-gray-500">Drag and drop a program here</p>
                         ) : (
                             <div className="flex flex-col items-center">
                                 {selectedPrograms.length > 0 && !inputFile && (
                                     <input type="file" onChange={handleFileChange} className="mt-4"/>
                                 )}
-                                <p className="text-gray-500 mt-4">Drag and drop more programs to continue the pipeline</p>
+                                {selectedPrograms.length > 0 && !fileUrl && (
+                                    <p className="text-gray-500 mt-4">Drag and drop more programs to continue the pipeline</p>
+                                )}
                             </div>
                         )}
                     </div>
+                    {fileUrl && (
+                        <div className="flex items-center mt-4">
+                            <BsCloudDownload
+                                title="Download File"
+                                onClick={handleDownload}
+                                className="text-2xl cursor-pointer hover:text-gray-400"
+                            />
+                            <span className="ml-2">{fileUrl.split('/').pop()}</span>
+                        </div>
+                    )}
                 </div>
                 {fileError && <p className="text-red-500 text-sm mt-2">{fileError}</p>}
                 <button

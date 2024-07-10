@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect, useContext} from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import { saveAs } from 'file-saver';
 import { Editor } from '@monaco-editor/react';
@@ -12,7 +12,8 @@ import { CiSquareChevDown } from 'react-icons/ci';
 import { MdOutlineCloudDone } from 'react-icons/md';
 import { FcCancel } from 'react-icons/fc';
 import { IoMdAttach } from "react-icons/io";
-import {UserContext} from "../contexts/UserContext";
+import { BsCloudDownload } from 'react-icons/bs'; // Import the download icon
+import { UserContext } from "../contexts/UserContext";
 
 const MyEditor = () => {
     const location = useLocation();
@@ -29,30 +30,32 @@ const MyEditor = () => {
     const [inputFileType, setInputFileType] = useState(program ? program.input_type : '.txt');
     const [outputFileType, setOutputFileType] = useState(program ? program.output_type : '.txt');
     const [isVisible, setIsVisible] = useState(program ? program.isVisible : true);
+    const [fileUrl, setFileUrl] = useState(null); // State for file URL
+    const [fileDownloadName, setFileDownloadName] = useState(null); // State for file download name
     const fileInputRef = useRef(null);
 
     const fileTypes = ['.txt', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.json', '.xml', '.html', '.js', '.py', '.java', '.png', '.jpg', '.jpeg', '.gif'];
     const languages = [
-        {label: "JavaScript", value: "javascript"},
-        {label: "Python", value: "python"},
-        {label: "Java", value: "java"},
-        {label: "C", value: "c"},
-        {label: "C++", value: "cpp"},
-        {label: "C#", value: "csharp"},
-        {label: "Go", value: "go"},
-        {label: "HTML", value: "html"},
-        {label: "CSS", value: "css"},
-        {label: "Ruby", value: "ruby"},
-        {label: "PHP", value: "php"},
-        {label: "Swift", value: "swift"},
-        {label: "Kotlin", value: "kotlin"},
-        {label: "R", value: "r"},
-        {label: "TypeScript", value: "typescript"},
-        {label: "Rust", value: "rust"},
-        {label: "SQL", value: "sql"},
-        {label: "Perl", value: "perl"},
-        {label: "Scala", value: "scala"},
-        {label: "Shell", value: "shell"},
+        { label: "JavaScript", value: "javascript" },
+        { label: "Python", value: "python" },
+        { label: "Java", value: "java" },
+        { label: "C", value: "c" },
+        { label: "C++", value: "cpp" },
+        { label: "C#", value: "csharp" },
+        { label: "Go", value: "go" },
+        { label: "HTML", value: "html" },
+        { label: "CSS", value: "css" },
+        { label: "Ruby", value: "ruby" },
+        { label: "PHP", value: "php" },
+        { label: "Swift", value: "swift" },
+        { label: "Kotlin", value: "kotlin" },
+        { label: "R", value: "r" },
+        { label: "TypeScript", value: "typescript" },
+        { label: "Rust", value: "rust" },
+        { label: "SQL", value: "sql" },
+        { label: "Perl", value: "perl" },
+        { label: "Scala", value: "scala" },
+        { label: "Shell", value: "shell" },
     ];
 
     useEffect(() => {
@@ -241,11 +244,21 @@ const MyEditor = () => {
 
         try {
             const response = await runProgram(formData);
-            setResult(`Program executed successfully! Result: ${response.data.file_url}`);
+            const fileUrl = response.data.file_url;
+            setFileUrl(fileUrl);
+            setFileDownloadName(fileUrl.split('/').pop());
+            setResult('Program executed successfully!');
         } catch (error) {
             console.error('Error executing program:', error);
             setResult(`Error executing program: ${error.response?.data?.error || error.message}`);
         }
+    };
+
+    const handleDownload = () => {
+        const link = document.createElement('a');
+        link.href = fileUrl;
+        link.download = fileDownloadName;
+        link.click();
     };
 
     return (
@@ -261,7 +274,7 @@ const MyEditor = () => {
                         <option key={lang.value} value={lang.value}>{lang.label}</option>
                     ))}
                 </select>
-                <div className="flex items-center gap gap-4">
+                <div className="flex items-center gap-4">
                     <VscRunAll
                         title="Run"
                         onClick={handleRun}
@@ -297,6 +310,16 @@ const MyEditor = () => {
                             onClick={handleFileIconClick}
                         />
                     </div>
+                    {fileUrl && (
+                        <div className="flex items-center">
+                            <BsCloudDownload
+                                title="Download File"
+                                onClick={handleDownload}
+                                className="text-2xl cursor-pointer hover:text-gray-400 ml-4"
+                            />
+                            <span className="ml-2">{fileDownloadName}</span>
+                        </div>
+                    )}
                     {isFullScreen ? (
                         <CgCompressLeft
                             title="Exit Fullscreen"
