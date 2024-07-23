@@ -9,8 +9,10 @@ import Comment from './Comment';
 import FilePreview from './FilePreview';
 import { getActions, createAction, deleteAction } from "../services/api.action";
 import { deleteProgram, updateProgram } from "../services/api.program";
+import { useTranslation } from 'react-i18next';
 
 const ProgramDetails = ({ program, user }) => {
+    const { t } = useTranslation();
     const [comments, setComments] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [replyTo, setReplyTo] = useState(null);
@@ -51,7 +53,7 @@ const ProgramDetails = ({ program, user }) => {
             const commentsTree = buildCommentsTree(programComments);
             setComments(commentsTree);
         } catch (error) {
-            console.error("Error fetching comments", error);
+            console.error(t('error_fetching_comments'), error);
         }
     };
 
@@ -60,18 +62,18 @@ const ProgramDetails = ({ program, user }) => {
             const response = await getUserInformation(program.author);
             setAuthor(response.data);
         } catch (error) {
-            console.error("Error fetching author information", error);
+            console.error(t('error_fetching_author'), error);
         }
     };
 
     const fetchActions = async () => {
         try {
             const response = await getActions();
-            console.log('Fetched actions:', response.data); // Debugging line
+            console.log('Fetched actions:', response.data);
             setActions(response.data);
             updateActionCounts(response.data);
         } catch (error) {
-            console.error("Error fetching actions", error);
+            console.error(t('error_fetching_actions'), error);
         }
     };
 
@@ -122,7 +124,7 @@ const ProgramDetails = ({ program, user }) => {
         }
 
         try {
-            const response = await createComment({
+            await createComment({
                 text: newComment,
                 program: program.id,
                 parent: replyTo ? replyTo.id : null,
@@ -131,7 +133,7 @@ const ProgramDetails = ({ program, user }) => {
             setNewComment('');
             setReplyTo(null);
         } catch (error) {
-            console.error("Error adding comment", error);
+            console.error(t('error_adding_comment'), error);
         }
     };
 
@@ -140,14 +142,14 @@ const ProgramDetails = ({ program, user }) => {
             const response = await getUserInformation(comment.author_id);
             const authorName = `${response.data.first_name} ${response.data.last_name}`;
             setReplyTo(comment);
-            const replyText = `Replied to @${authorName}: `;
+            const replyText = `${t('replied_to')} @${authorName}: `;
             setNewComment(replyText);
             setTimeout(() => {
                 commentInputRef.current.focus();
                 commentInputRef.current.setSelectionRange(replyText.length, replyText.length);
             }, 0);
         } catch (error) {
-            console.error("Error fetching author information", error);
+            console.error(t('error_fetching_author'), error);
         }
     };
 
@@ -165,7 +167,7 @@ const ProgramDetails = ({ program, user }) => {
             setNewComment('');
             setEditCommentId(null);
         } catch (error) {
-            console.error("Error updating comment", error);
+            console.error(t('error_updating_comment'), error);
         }
     };
 
@@ -174,19 +176,19 @@ const ProgramDetails = ({ program, user }) => {
             await deleteComment(commentId);
             fetchComments();
         } catch (error) {
-            console.error("Error deleting comment", error);
+            console.error(t('error_deleting_comment'), error);
         }
     };
 
     const handleAction = async (type, entityId, entity) => {
-        console.log('Handling action:', type, entityId, entity); // Debugging line
+        console.log('Handling action:', type, entityId, entity);
         const existingAction = actions.find(action => action.action === type && action.author_id === user.id && action[entity] === entityId);
         if (existingAction) {
             try {
                 await deleteAction(existingAction.id);
                 setActions(actions.filter(action => action.id !== existingAction.id));
             } catch (error) {
-                console.error("Error deleting action", error);
+                console.error(t('error_deleting_action'), error);
             }
         } else {
             try {
@@ -202,10 +204,10 @@ const ProgramDetails = ({ program, user }) => {
                 const response = await createAction(actionData);
                 setActions([...actions, response.data]);
             } catch (error) {
-                console.error("Error creating action", error);
+                console.error(t('error_creating_action'), error);
             }
         }
-        await fetchActions(); // Refresh actions after any update
+        await fetchActions();
     };
 
     const countActions = (type, entityId, entity) => {
@@ -228,7 +230,7 @@ const ProgramDetails = ({ program, user }) => {
             await deleteProgram(programId);
             // Additional logic if needed, such as refreshing the program list
         } catch (error) {
-            console.error("Error deleting program", error);
+            console.error(t('error_deleting_program'), error);
         }
     };
 
@@ -237,7 +239,7 @@ const ProgramDetails = ({ program, user }) => {
             await updateProgram(programId, programData);
             // Additional logic if needed, such as refreshing the program list
         } catch (error) {
-            console.error("Error updating program", error);
+            console.error(t('error_updating_program'), error);
         }
     };
 
@@ -282,7 +284,7 @@ const ProgramDetails = ({ program, user }) => {
     };
 
     if (!program || !user) {
-        return <div>Loading...</div>;
+        return <div>{t('loading')}</div>;
     }
 
     return (
@@ -306,13 +308,13 @@ const ProgramDetails = ({ program, user }) => {
                                         className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center"
                                         onClick={() => handleUpdateProgram(program.id, program)}
                                     >
-                                        <FaEdit className="mr-2" /> Modifier
+                                        <FaEdit className="mr-2" /> {t('edit')}
                                     </button>
                                     <button
                                         className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-200 flex items-center"
                                         onClick={() => handleDeleteProgram(program.id)}
                                     >
-                                        <FaTrash className="mr-2" /> Supprimer
+                                        <FaTrash className="mr-2" /> {t('delete')}
                                     </button>
                                 </div>
                             )}
@@ -382,7 +384,7 @@ const ProgramDetails = ({ program, user }) => {
                     ref={commentInputRef}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Commentaire..."
+                    placeholder={t('comment')}
                     className="flex-grow p-2 border rounded border-gray-300"
                     rows={3}
                 />

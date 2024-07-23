@@ -6,17 +6,19 @@ import Swal from 'sweetalert2';
 import { UserContext } from '../contexts/UserContext';
 import { createPipeline, getPrograms } from '../services/api.program';
 import fileIcons from '../utils/fileIcons';
+import { useTranslation } from 'react-i18next';
 
 const Pipeline = () => {
+    const { t } = useTranslation();
     const { user } = useContext(UserContext);
     const [programs, setPrograms] = useState([]);
     const [filteredPrograms, setFilteredPrograms] = useState([]);
     const [selectedPrograms, setSelectedPrograms] = useState([]);
     const [inputFile, setInputFile] = useState(null);
     const [fileError, setFileError] = useState(null);
-    const [executionError, setExecutionError] = useState(null); // State for execution error
+    const [executionError, setExecutionError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [fileUrl, setFileUrl] = useState(null); // State for file URL
+    const [fileUrl, setFileUrl] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -29,7 +31,7 @@ const Pipeline = () => {
             setPrograms(response.data);
             setFilteredPrograms(response.data);
         } catch (error) {
-            console.error("Error fetching programs", error);
+            console.error(t('error_fetching_programs'), error);
         }
     };
 
@@ -44,15 +46,15 @@ const Pipeline = () => {
         if (selectedPrograms.length === 0) {
             setSelectedPrograms([program]);
             setFileError(null);
-            setExecutionError(null); // Reset execution error
+            setExecutionError(null);
         } else {
             const lastProgram = selectedPrograms[selectedPrograms.length - 1];
             if (lastProgram.output_type === program.input_type) {
                 setSelectedPrograms([...selectedPrograms, program]);
                 setFileError(null);
-                setExecutionError(null); // Reset execution error
+                setExecutionError(null);
             } else {
-                setFileError(`The output of the previous program does not match the input of ${program.title}`);
+                setFileError(t('file_error_output_mismatch', { title: program.title }));
             }
         }
     };
@@ -67,7 +69,7 @@ const Pipeline = () => {
                 setInputFile(file);
                 setFileError(null);
             } else {
-                setFileError(`The selected file does not match the required input type (${program.input_type})`);
+                setFileError(t('file_error_input_mismatch', { inputType: program.input_type }));
             }
         }
     };
@@ -86,24 +88,24 @@ const Pipeline = () => {
                 const response = await createPipeline(formData);
                 const fileUrl = response.data.file_url;
                 setFileUrl(fileUrl);
-                setExecutionError(null); // Reset execution error
+                setExecutionError(null);
                 Swal.fire({
                     icon: 'success',
-                    title: 'Pipeline Created',
-                    text: 'Your pipeline has been successfully created!',
+                    title: t('pipeline_created_title'),
+                    text: t('pipeline_created_text'),
                 });
             } catch (error) {
-                console.error("Error creating pipeline", error);
-                setExecutionError(error.response.data.error); // Set execution error
+                console.error(t('error_creating_pipeline'), error);
+                setExecutionError(error.response.data.error);
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: 'There was an error creating your pipeline. Please check the error message in the drag-and-drop area.',
+                    title: t('error_title'),
+                    text: t('pipeline_error_text'),
                 });
             }
         } else {
             if (!inputFile) {
-                setFileError('Please select a file to upload');
+                setFileError(t('select_file_error'));
             }
         }
     };
@@ -122,7 +124,7 @@ const Pipeline = () => {
         setInputFile(null);
         setFileError(null);
         setFileUrl(null);
-        setExecutionError(null); // Reset execution error
+        setExecutionError(null);
     };
 
     const handleDownload = () => {
@@ -136,10 +138,10 @@ const Pipeline = () => {
         <div className="min-h-screen flex mt-32 flex-col items-center justify-center bg-gray-100 p-4">
             <div className="relative bg-white rounded-lg shadow-lg p-8 flex flex-col w-full max-w-6xl overflow-y-hidden">
                 <div className="flex justify-between items-center w-full mb-8">
-                    <h2 className="text-2xl font-bold">Programs</h2>
+                    <h2 className="text-2xl font-bold">{t('programs')}</h2>
                     <input
                         type="text"
-                        placeholder="Search programs..."
+                        placeholder={t('search_programs')}
                         value={searchTerm}
                         onChange={handleSearchChange}
                         className="p-2 border border-gray-300 rounded-md w-96"
@@ -169,8 +171,8 @@ const Pipeline = () => {
                                     }}
                                 >
                                     <h3 className="text-lg font-semibold">{program.title}</h3>
-                                    <p className="text-sm">Input: {program.input_type}</p>
-                                    <p className="text-sm">Output: {program.output_type}</p>
+                                    <p className="text-sm">{t('input')}: {program.input_type}</p>
+                                    <p className="text-sm">{t('output')}: {program.output_type}</p>
                                     <p className="text-sm">{program.description}</p>
                                 </div>
                             ))}
@@ -184,7 +186,6 @@ const Pipeline = () => {
                                 <div className="flex flex-col items-center">
                                     {fileIcons[program.input_type] || <FaFileAlt className="text-4xl"/>}
                                     <span className="text-lg font-semibold">{program.title}</span>
-
                                 </div>
                                 {index === 0 && inputFile && (
                                     <>
@@ -219,14 +220,14 @@ const Pipeline = () => {
                         {executionError ? (
                             <p className="text-red-500">{executionError}</p>
                         ) : selectedPrograms.length === 0 ? (
-                            <p className="text-gray-500">Drag and drop a program here</p>
+                            <p className="text-gray-500">{t('drag_and_drop')}</p>
                         ) : (
                             <div className="flex flex-col items-center">
                                 {selectedPrograms.length > 0 && !inputFile && (
                                     <input type="file" onChange={handleFileChange} className="mt-4"/>
                                 )}
                                 {selectedPrograms.length > 0 && !fileUrl && (
-                                    <p className="text-gray-500 mt-4">Drag and drop more programs to continue the pipeline</p>
+                                    <p className="text-gray-500 mt-4">{t('drag_and_drop_more')}</p>
                                 )}
                             </div>
                         )}
@@ -234,7 +235,7 @@ const Pipeline = () => {
                     {fileUrl && (
                         <div className="flex items-center mt-4">
                             <BsCloudDownload
-                                title="Download File"
+                                title={t('download_file')}
                                 onClick={handleDownload}
                                 className="text-2xl cursor-pointer hover:text-gray-400"
                             />
@@ -247,7 +248,7 @@ const Pipeline = () => {
                     onClick={handleSubmit}
                     className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
-                    Valider
+                    {t('submit')}
                 </button>
             </div>
         </div>

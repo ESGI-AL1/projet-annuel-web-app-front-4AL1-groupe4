@@ -6,9 +6,11 @@ import { UserContext } from "../contexts/UserContext";
 import { FaEllipsisV, FaEdit, FaTrash, FaUserPlus } from 'react-icons/fa';
 import { toast } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { useTranslation } from 'react-i18next';
 
 const ListeGroup = () => {
     const { user } = useContext(UserContext);
+    const { t } = useTranslation();
     const [groups, setGroups] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -57,7 +59,7 @@ const ListeGroup = () => {
             setGroups(response.data);
             setLoading(false);
         } catch (error) {
-            setError("There was an error fetching the groups!");
+            setError(t("error_fetching_groups"));
             setLoading(false);
         }
     };
@@ -68,7 +70,7 @@ const ListeGroup = () => {
             setUsers(response.data);
             setFilteredUsers(response.data);
         } catch (error) {
-            console.error('Error fetching users:', error);
+            console.error(t('error_fetching_users'), error);
         }
     };
 
@@ -79,7 +81,7 @@ const ListeGroup = () => {
                 fetchGroups();
                 setShowUpdatePopup(false);
             } catch (error) {
-                console.error('Error updating group:', error);
+                console.error(t('error_updating_group'), error);
             }
         }
     };
@@ -88,14 +90,14 @@ const ListeGroup = () => {
         try {
             const resp = await deleteGroup(groupId);
             if (resp) {
-                toast.success("Successfully deleted the group.");
+                toast.success(t("success_delete_group"));
                 fetchGroups();
             } else {
-                toast.error("Failed to delete the group.");
+                toast.error(t("error_delete_group"));
             }
         } catch (error) {
-            console.error('Error deleting group:', error);
-            toast.error('Error deleting group. Please try again later.');
+            console.error(t('error_deleting_group'), error);
+            toast.error(t('error_deleting_group_retry'));
         }
     };
 
@@ -110,7 +112,7 @@ const ListeGroup = () => {
                 fetchGroups();
                 setShowAddUserPopup(false);
             } catch (error) {
-                console.error('Error adding user to group:', error);
+                console.error(t('error_adding_user_to_group'), error);
             }
         }
     };
@@ -153,7 +155,7 @@ const ListeGroup = () => {
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div>{t("loading")}</div>;
     }
 
     if (error) {
@@ -163,7 +165,7 @@ const ListeGroup = () => {
     return (
         <div className="bg-gray-100 rounded shadow-lg max-h-96 overflow-y-auto relative">
             <div className="sticky top-0 bg-white p-4 z-10">
-                <h2 className="text-2xl font-bold mb-4">Liste des groupes</h2>
+                <h2 className="text-2xl font-bold mb-4">{t("group_list")}</h2>
             </div>
             <div className="p-4">
                 {groups.map((group, index) => (
@@ -185,19 +187,19 @@ const ListeGroup = () => {
                                             className="block w-full text-left px-4 py-2 text-blue-500 hover:bg-gray-200 flex items-center"
                                             onClick={() => openUpdatePopup(group)}
                                         >
-                                            <FaEdit className="mr-2" /> Modifier
+                                            <FaEdit className="mr-2" /> {t("edit")}
                                         </button>
                                         <button
                                             className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-200 flex items-center"
                                             onClick={() => handleDeleteGroup(group.id)}
                                         >
-                                            <FaTrash className="mr-2" /> Supprimer
+                                            <FaTrash className="mr-2" /> {t("delete")}
                                         </button>
                                         <button
                                             className="block w-full text-left px-4 py-2 text-green-500 hover:bg-gray-200 flex items-center"
                                             onClick={() => openAddUserPopup(group)}
                                         >
-                                            <FaUserPlus className="mr-2" /> Ajouter
+                                            <FaUserPlus className="mr-2" /> {t("add_user")}
                                         </button>
                                     </div>
                                 )}
@@ -210,31 +212,31 @@ const ListeGroup = () => {
             {showUpdatePopup && selectedGroup && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
                     <div className="bg-white p-6 rounded-lg shadow-lg" ref={updatePopupRef}>
-                        <h2 className="text-xl font-bold mb-4">Modifier le groupe</h2>
+                        <h2 className="text-xl font-bold mb-4">{t("edit_group")}</h2>
                         <input
                             type="text"
                             className="w-full p-2 border border-gray-300 rounded-lg mb-4"
                             value={groupName}
                             onChange={(e) => setGroupName(e.target.value)}
-                            placeholder="Nom du groupe"
+                            placeholder={t("group_name")}
                         />
                         <textarea
                             className="w-full p-2 border border-gray-300 rounded-lg mb-4"
                             value={groupDescription}
                             onChange={(e) => setGroupDescription(e.target.value)}
-                            placeholder="Description du groupe"
+                            placeholder={t("group_description")}
                         />
                         <button
                             className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-700"
                             onClick={handleUpdateGroup}
                         >
-                            Valider
+                            {t("validate")}
                         </button>
                         <button
                             className="bg-red-500 text-white py-2 px-4 rounded ml-2 hover:bg-red-700"
                             onClick={() => setShowUpdatePopup(false)}
                         >
-                            Annuler
+                            {t("cancel")}
                         </button>
                     </div>
                 </div>
@@ -243,13 +245,13 @@ const ListeGroup = () => {
             {showAddUserPopup && selectedGroup && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-30">
                     <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full" ref={addUserPopupRef}>
-                        <h2 className="text-xl font-bold mb-4">Ajouter un utilisateur au groupe</h2>
+                        <h2 className="text-xl font-bold mb-4">{t("add_user_to_group")}</h2>
                         <input
                             type="text"
                             className="w-full p-2 border border-gray-300 rounded-lg mb-4"
                             value={searchText}
                             onChange={handleSearchChange}
-                            placeholder="Rechercher un utilisateur"
+                            placeholder={t("search_user")}
                         />
                         <div className="max-h-60 overflow-y-auto mb-4">
                             <ul>
@@ -271,7 +273,7 @@ const ListeGroup = () => {
                                             className="bg-green-500 text-white py-1 px-2 rounded hover:bg-green-700"
                                             onClick={() => handleAddUserToGroup(user.id)}
                                         >
-                                            Ajouter
+                                            {t("add")}
                                         </button>
                                     </li>
                                 ))}
@@ -281,7 +283,7 @@ const ListeGroup = () => {
                             className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700 w-full"
                             onClick={() => setShowAddUserPopup(false)}
                         >
-                            Annuler
+                            {t("cancel")}
                         </button>
                     </div>
                 </div>

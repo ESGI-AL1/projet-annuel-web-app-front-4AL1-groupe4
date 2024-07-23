@@ -3,6 +3,8 @@ import { FaEllipsisV, FaEdit, FaTrash, FaHeart, FaRegHeart } from 'react-icons/f
 import { GoReply, GoThumbsup, GoThumbsdown } from 'react-icons/go';
 import { getUserInformation } from "../services/api.user";
 import IconToggle from './IconToggle';
+import t from "../i18n"
+
 
 const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment, user, actions, setActions, handleAction, countActions }) => {
     const [author, setAuthor] = useState(null);

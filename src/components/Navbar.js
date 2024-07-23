@@ -1,19 +1,20 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaGlobe, FaMoon, FaBars } from "react-icons/fa";
+import { FaGlobe, FaBars } from "react-icons/fa";
 import { TbUsersGroup, TbUserCog } from "react-icons/tb";
 import { RiUserFollowLine } from "react-icons/ri";
 import { googleLogout } from '@react-oauth/google';
-import { GoFileCode, GoMail, GoBell } from "react-icons/go";
+import { GoFileCode, GoMail } from "react-icons/go";
 import { CiLogout } from "react-icons/ci";
 import { UserContext } from "../contexts/UserContext";
+import { useTranslation } from 'react-i18next';
 
 function Navbar() {
     const { user, setUser } = useContext(UserContext);
     const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
     const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
-    const [language, setLanguage] = useState("fr");
+    const [language, setLanguage] = useState('fr');
     const [searchTerm, setSearchTerm] = useState('');
     const [notifications, setNotifications] = useState([]);
     const [messages, setMessages] = useState([]);
@@ -23,6 +24,7 @@ function Navbar() {
     const profileDropdownRef = useRef(null);
     const languageDropdownRef = useRef(null);
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -44,21 +46,21 @@ function Navbar() {
         if (user) {
             setTimeout(() => {
                 const mockNotifications = [
-                    { id: 1, message: "New comment on your post" },
-                    { id: 2, message: "You have a new follower" }
+                    { id: 1, message: t("new_comment") },
+                    { id: 2, message: t("new_follower") }
                 ];
                 setNotifications(mockNotifications);
                 setHasNewNotification(mockNotifications.length > 0);
 
                 const mockMessages = [
-                    { id: 1, message: "New message from John Doe" },
-                    { id: 2, message: "Your report is ready" }
+                    { id: 1, message: t("new_message", { name: "John Doe" }) },
+                    { id: 2, message: t("report_ready") }
                 ];
                 setMessages(mockMessages);
                 setHasNewMessage(mockMessages.length > 0);
             }, 1000);
         }
-    }, [user]);
+    }, [user, t]);
 
     const handleSignOut = () => {
         setUser(null);
@@ -77,8 +79,9 @@ function Navbar() {
     };
 
     const toggleDarkMode = () => setDarkMode(!darkMode);
-    const changeLanguage = (lang) => {
-        setLanguage(lang);
+    const changeLanguage = (language) => {
+        setLanguage(language);
+        i18n.changeLanguage(language);
         setLanguageDropdownOpen(false);
     };
 
@@ -116,27 +119,27 @@ function Navbar() {
                             type="text"
                             value={searchTerm}
                             onChange={handleSearchChange}
-                            placeholder="Recherche..."
+                            placeholder={t("search_placeholder")}
                             className="flex-grow p-2 border rounded border-gray-300"
                         />
                         <button
                             onClick={handleSearch}
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                         >
-                            Valider
+                            {t("validate")}
                         </button>
                     </div>
                     <div className="hidden md:flex items-center ml-auto">
                         <div className="flex flex-row">
                             <a href="/home"
                                className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                               onClick={handleHomeClick}>Home</a>
+                               onClick={handleHomeClick}>{t("home")}</a>
                             {!user && <a href="/login"
-                                         className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Login</a>}
+                                         className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">{t("login")}</a>}
                             <a href="/editor"
-                               className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Editor</a>
+                               className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">{t("editor")}</a>
                             <a href="/pipeline"
-                               className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Pipeline</a>
+                               className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">{t("pipeline")}</a>
                         </div>
 
                         <div className="relative ml-4 flex items-center" ref={languageDropdownRef}>
@@ -145,7 +148,7 @@ function Navbar() {
                                 className="focus:outline-none"
                             >
                                 <FaGlobe className={`inline-block ${languageDropdownOpen ? 'text-blue-500' : ''}`}
-                                         style={{fontSize: '1.3rem'}}/>
+                                         style={{ fontSize: '1.3rem' }} />
                                 <span className="ml-1">{language.toUpperCase()}</span>
                             </button>
                             {languageDropdownOpen && (
@@ -163,30 +166,23 @@ function Navbar() {
                                 </div>
                             )}
                         </div>
-                        <button onClick={toggleDarkMode} className="ml-4 focus:outline-none">
-                            <FaMoon className={`inline-block ${darkMode ? 'text-white' : 'text-gray-400'}`}
-                                    style={{fontSize: '1.5rem'}}/>
-                        </button>
+
                         {user && (
                             <div className="relative ml-4">
-                                <button onClick={handleNotificationsClick} className="focus:outline-none">
-                                    <GoBell className="inline-block text-gray-400" style={{fontSize: '1.5rem'}}/>
-                                    {hasNewNotification && <span
-                                        className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
-                                </button>
+
                             </div>
                         )}
                         {user && (
                             <div className="relative  flex flex-row items-center justify-between">
                                 <div className="relative ml-4 ">
                                     <button onClick={handleMessagesClick} className="focus:outline-none">
-                                        <GoMail className="inline-block text-gray-400" style={{fontSize: '1.5rem'}}/>
+                                        <GoMail className="inline-block text-gray-400" style={{ fontSize: '1.5rem' }} />
                                         {hasNewMessage && <span
                                             className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
                                     </button>
                                 </div>
                                 <a href="/Chat" onClick={handleMessagesClick}
-                                   className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Chat</a>
+                                   className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">{t("chat")}</a>
                             </div>
 
                         )}
@@ -212,18 +208,18 @@ function Navbar() {
                                         >
                                             <a href="/profile"
                                                className="block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center">
-                                                <TbUserCog className="mr-2"/> Modifier Profil
+                                                <TbUserCog className="mr-2" /> {t("edit_profile")}
                                             </a>
                                             <a href="/programmes"
                                                className="block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center">
-                                                <GoFileCode className="mr-2"/> Programmes
+                                                <GoFileCode className="mr-2" /> {t("programmes")}
                                             </a>
 
                                             <button
                                                 onClick={handleSignOut}
                                                 className="w-full text-left block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center"
                                             >
-                                                <CiLogout className="mr-2"/> Déconnexion
+                                                <CiLogout className="mr-2" /> {t("sign_out")}
                                             </button>
 
                                         </div>
@@ -245,31 +241,27 @@ function Navbar() {
                             type="text"
                             value={searchTerm}
                             onChange={handleSearchChange}
-                            placeholder="Recherche..."
+                            placeholder={t("search_placeholder")}
                             className="p-2 border rounded border-gray-300"
                         />
                         <button
                             onClick={handleSearch}
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                         >
-                            Valider
+                            {t("validate")}
                         </button>
                         <a href="/home"
                            className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                           onClick={handleHomeClick}>Home</a>
+                           onClick={handleHomeClick}>{t("home")}</a>
                         {!user && <a href="/login"
-                                     className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Login</a>}
+                                     className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">{t("login")}</a>}
                         <a href="/editor"
-                           className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Editor</a>
+                           className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">{t("editor")}</a>
                         <a href="/pipeline"
-                           className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Pipeline</a>
+                           className="text-gray-400 hover:text-white px-3 py-2 rounded-md text-sm font-medium">{t("pipeline")}</a>
                         {user && (
                             <>
-                                <button onClick={handleNotificationsClick} className="focus:outline-none">
-                                    <GoBell className="inline-block text-gray-400" style={{ fontSize: '1.5rem' }} />
-                                    {hasNewNotification && <span
-                                        className="absolute top-0 right-0 inline-block w-3 h-3 bg-red-600 rounded-full"></span>}
-                                </button>
+
                                 <button onClick={handleMessagesClick} className="focus:outline-none">
                                     <GoMail className="inline-block text-gray-400" style={{ fontSize: '1.5rem' }} />
                                     {hasNewMessage && <span
@@ -278,17 +270,17 @@ function Navbar() {
                                 <div className="flex flex-col items-center">
                                     <a href="/profile"
                                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center">
-                                        <TbUserCog className="mr-2" /> Modifier Profil
+                                        <TbUserCog className="mr-2" /> {t("edit_profile")}
                                     </a>
                                     <a href="/programmes"
                                        className="block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center">
-                                        <GoFileCode className="mr-2" /> Programmes
+                                        <GoFileCode className="mr-2" /> {t("programmes")}
                                     </a>
                                     <button
                                         onClick={handleSignOut}
                                         className="w-full text-left block px-4 py-2 text-gray-800 hover:bg-gray-200 flex items-center"
                                     >
-                                        <CiLogout className="mr-2" /> Déconnexion
+                                        <CiLogout className="mr-2" /> {t("sign_out")}
                                     </button>
                                 </div>
                             </>
@@ -305,13 +297,13 @@ function Navbar() {
                             onClick={() => navigate('/createGroupe')}
                             className="hover:bg-blue-400 text-black font-light py-2 border hover:border-white border-gray-300 px-7 rounded-md flex items-center"
                         >
-                            <TbUsersGroup className="mr-2"/> Créer un groupe
+                            <TbUsersGroup className="mr-2" /> {t("create_group")}
                         </button>
                         <button
-                            onClick={() => console.log("Liste des amis")}
+                            onClick={() => navigate(t("/listFriends"))}
                             className="hover:bg-blue-400 text-black font-light py-2 px-7 rounded-md hover:border-white border border-gray-300 flex items-center"
                         >
-                            <RiUserFollowLine className="mr-2 text-green-800 font-semibold inline-block"/> <span>Liste des amis</span>
+                            <RiUserFollowLine className="mr-2 text-green-800 font-semibold inline-block" /> <span>{t("friends_list")}</span>
                             <span
                                 className="absolute top-0 right-0 inline-block w-3 h-3 bg-green-600 rounded-full"></span>
                         </button>
