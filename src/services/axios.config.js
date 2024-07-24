@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const URL = "https://reverse-proxy-3le2.onrender.com"
+const URL = "https://deploy-62iv.onrender.com/api/"
 export const baseUrl = axios.create({
     baseURL: `${URL}`,
 });
