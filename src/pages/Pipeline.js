@@ -7,6 +7,7 @@ import { UserContext } from '../contexts/UserContext';
 import { createPipeline, getPrograms } from '../services/api.program';
 import fileIcons from '../utils/fileIcons';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 
 const Pipeline = () => {
     const { t } = useTranslation();
@@ -18,7 +19,8 @@ const Pipeline = () => {
     const [fileError, setFileError] = useState(null);
     const [executionError, setExecutionError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [fileUrl, setFileUrl] = useState(null);
+    const [fileUrls, setFileUrls] = useState([]); // Nouveau state pour les URLs des fichiers
+    const [fileContents, setFileContents] = useState([]); // Nouveau state pour les contenus des fichiers
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -39,7 +41,7 @@ const Pipeline = () => {
         return JSON.stringify(program);
     };
 
-    const handleDrop = (e) => {
+    const handleDrop = async (e) => {
         e.preventDefault();
         const program = JSON.parse(e.dataTransfer.getData('program'));
 
@@ -57,9 +59,13 @@ const Pipeline = () => {
                 setFileError(t('file_error_output_mismatch', { title: program.title }));
             }
         }
+
+        if (inputFile) {
+            await submitPipeline([...selectedPrograms, program], inputFile);
+        }
     };
 
-    const handleFileChange = (e) => {
+    const handleFileChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
             const program = selectedPrograms[0];
@@ -68,6 +74,7 @@ const Pipeline = () => {
             if (fileExtension === program.input_type) {
                 setInputFile(file);
                 setFileError(null);
+                await submitPipeline([program], file); // Submit the pipeline automatically
             } else {
                 setFileError(t('file_error_input_mismatch', { inputType: program.input_type }));
             }
@@ -78,35 +85,64 @@ const Pipeline = () => {
         navigate("/home");
     };
 
-    const handleSubmit = async () => {
-        if (inputFile && selectedPrograms.length > 0) {
-            const formData = new FormData();
-            formData.append('input_file', inputFile);
-            formData.append('programs', JSON.stringify(selectedPrograms.map(prog => prog.file.split('/').pop())));
+    const fetchFileContent = async (url) => {
+        try {
+            const response = await axios.get(url, { responseType: 'blob' });
+            const fileType = response.data.type;
 
-            try {
-                const response = await createPipeline(formData);
-                const fileUrl = response.data.file_url;
-                setFileUrl(fileUrl);
+            const fileReader = new FileReader();
+            fileReader.onload = () => {
+                const content = fileReader.result;
+                if (fileType === 'application/pdf') {
+                    setFileContents((prevContents) => [...prevContents, { content: 'PDF content cannot be displayed directly. Download the file to view.', url }]);
+                } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                    setFileContents((prevContents) => [...prevContents, { content: 'Word content cannot be displayed directly. Download the file to view.', url }]);
+                } else {
+                    setFileContents((prevContents) => [...prevContents, { content, url }]);
+                }
+            };
+
+            if (fileType === 'application/pdf' || fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+                fileReader.readAsArrayBuffer(response.data);
+            } else {
+                fileReader.readAsText(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching file content:', error);
+        }
+    };
+
+    const submitPipeline = async (programs, file) => {
+        const formData = new FormData();
+        formData.append('input_file', file);
+        formData.append('programs', JSON.stringify(programs.map(prog => prog.file.split('/').pop())));
+
+        try {
+            const response = await createPipeline(formData);
+            if (response && response.data && response.data.files_url) {
+                const newFileUrls = Object.values(response.data.files_url);
+                setFileUrls(newFileUrls);
                 setExecutionError(null);
                 Swal.fire({
                     icon: 'success',
                     title: t('pipeline_created_title'),
                     text: t('pipeline_created_text'),
                 });
-            } catch (error) {
-                console.error(t('error_creating_pipeline'), error);
-                setExecutionError(error.response.data.error);
-                Swal.fire({
-                    icon: 'error',
-                    title: t('error_title'),
-                    text: t('pipeline_error_text'),
-                });
+
+                for (const url of newFileUrls) {
+                    await fetchFileContent(url);
+                }
+            } else {
+                throw new Error(t('error_creating_pipeline'));
             }
-        } else {
-            if (!inputFile) {
-                setFileError(t('select_file_error'));
-            }
+        } catch (error) {
+            console.error(t('error_creating_pipeline'), error);
+            setExecutionError(error.response?.data?.error || error.message);
+            Swal.fire({
+                icon: 'error',
+                title: t('error_title'),
+                text: t('pipeline_error_text'),
+            });
         }
     };
 
@@ -123,11 +159,12 @@ const Pipeline = () => {
         setSelectedPrograms([]);
         setInputFile(null);
         setFileError(null);
-        setFileUrl(null);
+        setFileUrls([]); // Reset les URLs des fichiers
+        setFileContents([]); // Reset les contenus des fichiers
         setExecutionError(null);
     };
 
-    const handleDownload = () => {
+    const handleDownload = (fileUrl) => {
         const link = document.createElement('a');
         link.href = fileUrl;
         link.download = fileUrl.split('/').pop();
@@ -159,13 +196,13 @@ const Pipeline = () => {
                             {filteredPrograms.map((program) => (
                                 <div
                                     key={program.id}
-                                    draggable
+                                    draggable={selectedPrograms.length === 0 || (selectedPrograms.length > 0 && inputFile !== null)}
                                     onDragStart={(e) => e.dataTransfer.setData('program', handleDragStart(program))}
                                     className={`p-4 border border-gray-300 rounded-md shadow-sm hover:shadow-md cursor-pointer ${
-                                        !inputFile && selectedPrograms.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                        (!inputFile && selectedPrograms.length > 0) || fileError ? 'opacity-50 cursor-not-allowed' : ''
                                     }`}
                                     onDragOver={(e) => {
-                                        if (!inputFile && selectedPrograms.length > 0) {
+                                        if ((!inputFile && selectedPrograms.length > 0) || fileError) {
                                             e.preventDefault();
                                         }
                                     }}
@@ -197,6 +234,19 @@ const Pipeline = () => {
                                         </div>
                                     </>
                                 )}
+                                {fileUrls[index] && (
+                                    <>
+                                        <FaPlus className="text-xl text-blue-500"/>
+                                        <div className="flex flex-col items-center">
+                                            <BsCloudDownload
+                                                title={t('download_file')}
+                                                onClick={() => handleDownload(fileUrls[index])}
+                                                className="text-2xl cursor-pointer hover:text-gray-400"
+                                            />
+                                            <span className="text-sm">{fileUrls[index].split('/').pop()}</span>
+                                        </div>
+                                    </>
+                                )}
                                 {index < selectedPrograms.length - 1 && (
                                     <div className="flex items-center justify-center">
                                         <span className="text-blue-500 text-2xl">------></span>
@@ -212,44 +262,29 @@ const Pipeline = () => {
                     )}
                 </div>
                 <div
-                    className="border border-dashed border-gray-300 p-4 rounded-md h-64 flex items-center justify-center"
+                    className="border border-dashed border-gray-300 p-4 rounded-md h-64 flex flex-col items-center justify-center"
                     onDrop={handleDrop}
                     onDragOver={(e) => e.preventDefault()}
                 >
-                    <div className="text-center">
-                        {executionError ? (
-                            <p className="text-red-500">{executionError}</p>
-                        ) : selectedPrograms.length === 0 ? (
-                            <p className="text-gray-500">{t('drag_and_drop')}</p>
-                        ) : (
-                            <div className="flex flex-col items-center">
-                                {selectedPrograms.length > 0 && !inputFile && (
-                                    <input type="file" onChange={handleFileChange} className="mt-4"/>
-                                )}
-                                {selectedPrograms.length > 0 && !fileUrl && (
-                                    <p className="text-gray-500 mt-4">{t('drag_and_drop_more')}</p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                    {fileUrl && (
-                        <div className="flex items-center mt-4">
-                            <BsCloudDownload
-                                title={t('download_file')}
-                                onClick={handleDownload}
-                                className="text-2xl cursor-pointer hover:text-gray-400"
-                            />
-                            <span className="ml-2">{fileUrl.split('/').pop()}</span>
+                    {executionError ? (
+                        <p className="text-red-500">{executionError}</p>
+                    ) : selectedPrograms.length === 0 ? (
+                        <p className="text-gray-500">{t('drag_and_drop')}</p>
+                    ) : (
+                        <div className="flex flex-col items-center">
+                            {selectedPrograms.length > 0 && !inputFile && (
+                                <input type="file" onChange={handleFileChange} className="mt-4"/>
+                            )}
+                            {fileContents.map((file, index) => (
+                                <div key={index} className="mt-4 p-2 border border-gray-300 rounded-md bg-gray-50 w-full">
+                                    <h4 className="text-lg font-semibold">Contenu du fichier:</h4>
+                                    <p className="text-gray-700 whitespace-pre-line">{file.content}</p>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
                 {fileError && <p className="text-red-500 text-sm mt-2">{fileError}</p>}
-                <button
-                    onClick={handleSubmit}
-                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                    {t('submit')}
-                </button>
             </div>
         </div>
     );
