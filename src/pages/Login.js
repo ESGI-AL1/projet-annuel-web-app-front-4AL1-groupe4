@@ -1,22 +1,22 @@
 import React from "react";
 import { FaGoogle } from "react-icons/fa";
 import { GoogleLogin } from '@react-oauth/google';
-import { jwtDecode } from "jwt-decode"; // Assurez-vous que l'importation est correcte
+import {jwtDecode} from "jwt-decode";
 import { useContext } from 'react';
 import { UserContext } from '../contexts/UserContext';
 import { getToken } from '../services/api.auth.token';
 import { useForm } from 'react-hook-form';
-
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { notifyError } from '../functions/toast';
 import { useNavigate, Link } from 'react-router-dom';
-
 import loginimagebg from "../assets/photos/Tiny_people_carrying_key_to_open_padlock-removebg-preview.png";
 import { getUserInformation } from "../services/api.user";
 import { createUser } from "../services/api.auth.user";
+import { useTranslation } from 'react-i18next';
 
 function LoginPage() {
+	const { t } = useTranslation();
 	const { setUser } = useContext(UserContext);
 	const { register, handleSubmit } = useForm();
 	const navigate = useNavigate();
@@ -39,13 +39,12 @@ function LoginPage() {
 				setUser(null);
 				navigate('/login');
 				window.location.reload()
-
 			}, timeRemaining * 1000);
 			navigate('/home');
 		} catch (error) {
 			if (error.response) {
 				if (error.response.status === 401) {
-					notifyError("Incorrect username or password");
+					notifyError(t("error_incorrect_credentials"));
 				} else if (error.message) {
 					notifyError(error.message);
 				}
@@ -70,7 +69,6 @@ function LoginPage() {
 		};
 
 		try {
-			/***Attempt to connect with Google information*/
 			const res = await getToken({
 				username: formData.username,
 				password: formData.password
@@ -90,11 +88,9 @@ function LoginPage() {
 			}, timeRemaining * 1000);
 			navigate('/home');
 		} catch (loginError) {
-			/**if it fails like it's the first time to connect with this  Google account it try to create a user in our api with this Google information
-			 * after this it try to connect once again*/
 			if (loginError.response && loginError.response.status === 401) {
 				try {
-					await createUser(formData).then(r => console.log('je vien de faire un poste create user'));
+					await createUser(formData).then(r => console.log('User created'));
 					const res = await getToken({
 						username: formData.username,
 						password: formData.password
@@ -114,10 +110,10 @@ function LoginPage() {
 					}, timeRemaining * 1000);
 					navigate('/home');
 				} catch (createUserError) {
-					notifyError("Error creating user: " + createUserError.message);
+					notifyError(t("error_creating_user") + createUserError.message);
 				}
 			} else {
-				notifyError("Error logging in with Google: " + loginError.message);
+				notifyError(t("error_google_login") + loginError.message);
 			}
 		}
 	};
@@ -127,50 +123,48 @@ function LoginPage() {
 			<img src={loginimagebg} alt="Error" className="h-64" />
 			<div className="flex items-center justify-center min-h-screen px-8 bg-gray-100 w-full max-w-lg">
 				<div className="px-10 py-8 mt-4 text-left bg-white shadow-lg rounded-lg w-full">
-					<h3 className="text-2xl font-bold text-center">Connectez-vous à votre compte</h3>
+					<h3 className="text-2xl font-bold text-center">{t("login_title")}</h3>
 					<ToastContainer />
 					<form onSubmit={handleSubmit(onSubmit)}>
 						<div className="mt-4">
-							<label className="block" htmlFor="username">Nom d'utilisateur</label>
-							<input type="text" placeholder="Nom d'utilisateur"
+							<label className="block" htmlFor="username">{t("username_label")}</label>
+							<input type="text" placeholder={t("username_placeholder")}
 								   id="username"
 								   {...register('username', { required: true })}
 								   className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
 							/>
-							<label className="block mt-4" htmlFor="password">Mot de passe</label>
-							<input type="password" placeholder="Mot de passe"
+							<label className="block mt-4" htmlFor="password">{t("password_label")}</label>
+							<input type="password" placeholder={t("password_placeholder")}
 								   id="password"
 								   {...register('password', { required: true })}
 								   className="w-full px-4 py-2 mt-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-600"
 							/>
 							<div className="mt-3">
 								<p>
-									<Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">Mot de passe oublié</Link>
+									<Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">{t("forgot_password")}</Link>
 								</p>
 							</div>
 							<button type="submit"
 									className="w-full text-center py-2 mt-4 text-white bg-blue-600 rounded-lg hover:bg-blue-900">
-								Connexion
+								{t("login_button")}
 							</button>
 						</div>
 					</form>
 					<div className="text-center mt-3">
-                        <span>Pas de compte?
-                            <Link to="/register" className="w-full text-sm text-blue-600 hover:underline"> S'inscrire</Link>
+                        <span>{t("no_account")}
+							<Link to="/register" className="w-full text-sm text-blue-600 hover:underline"> {t("sign_up")}</Link>
                         </span>
 					</div>
-					<div className=" flex flex-row mt-6 w-full">
+					<div className="flex flex-row mt-6 w-full">
 						<GoogleLogin className="w-full p-12"
 									 onSuccess={handleOAuthLogin}
-									 onError={() => console.log('Login Failed')}
+									 onError={() => console.log(t("login_failed"))}
 						>
 							<button
 								className="w-full flex items-center justify-center px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-700">
-								<FaGoogle className="mr-2"/> Connexion avec Google
+								<FaGoogle className="mr-2"/> {t("login_with_google")}
 							</button>
-
 						</GoogleLogin>
-
 					</div>
 				</div>
 			</div>

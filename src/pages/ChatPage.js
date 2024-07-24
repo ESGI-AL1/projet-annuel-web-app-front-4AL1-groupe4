@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { FaPaperPlane, FaCamera, FaImage, FaCog, FaQuestion, FaUsers, FaTimes, FaEdit, FaTrash, FaEllipsisV } from 'react-icons/fa';
 import { getAllUsers } from '../services/api.user';
-import { listFriends } from '../services/api.friendship';
+import { listFriendRequests } from '../services/api.friendship';
 import { getGroups, updateGroup } from '../services/api.groups';
 import { getMessages, createMessage, updateMessage, deleteMessage } from '../services/api.message';
 import { UserContext } from '../contexts/UserContext';
+import { useTranslation } from 'react-i18next';
 
 const ChatPage = () => {
     const { user } = useContext(UserContext);
+    const { t } = useTranslation();
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [friends, setFriends] = useState([]);
@@ -21,8 +23,8 @@ const ChatPage = () => {
     const [users, setUsers] = useState([]);
     const [memberSearchText, setMemberSearchText] = useState('');
     const [editingMessage, setEditingMessage] = useState(null);
-    const [messageMenuOpen, setMessageMenuOpen] = useState(null); // State to track which message menu is open
-    const messageMenuRef = useRef(null); // Ref to track message menu for closing on outside click
+    const [messageMenuOpen, setMessageMenuOpen] = useState(null);
+    const messageMenuRef = useRef(null);
 
     useEffect(() => {
         if (user) {
@@ -56,20 +58,25 @@ const ChatPage = () => {
     const fetchFriends = async () => {
         try {
             const usersResponse = await getAllUsers();
-            const friendsResponse = await listFriends();
+            const friendsResponse = await listFriendRequests();
 
             const allUsers = usersResponse.data;
             const friendships = friendsResponse.data;
 
-            const acceptedFriends = friendships
-                .filter(f => f.user === user.id && f.status === 'accepted')
-                .flatMap(f => f.friend);
+            const acceptedFriends = friendships.filter(f => f.status === 'accepted').flatMap(f => {
+                if (f.user === user.id) {
+                    return f.friend;
+                } else if (f.friend === user.id) {
+                    return f.user;
+                }
+                return [];
+            });
 
             const friendUsers = allUsers.filter(u => acceptedFriends.includes(u.id));
             setFriends(friendUsers);
             setFilteredFriends(friendUsers);
         } catch (error) {
-            console.error('Error fetching friends', error);
+            console.error(t('errorFetchingFriends'), error);
         }
     };
 
@@ -80,7 +87,7 @@ const ChatPage = () => {
             setGroups(userGroups);
             setFilteredGroups(userGroups);
         } catch (error) {
-            console.error('Error fetching groups', error);
+            console.error(t('errorFetchingGroups'), error);
         }
     };
 
@@ -89,7 +96,7 @@ const ChatPage = () => {
             const response = await getAllUsers();
             setUsers(response.data);
         } catch (error) {
-            console.error('Error fetching users', error);
+            console.error(t('errorFetchingUsers'), error);
         }
     };
 
@@ -103,7 +110,7 @@ const ChatPage = () => {
             );
             setMessages(relevantMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
         } catch (error) {
-            console.error('Error fetching messages', error);
+            console.error(t('errorFetchingMessages'), error);
         }
     };
 
@@ -114,7 +121,7 @@ const ChatPage = () => {
             const relevantMessages = allMessages.filter(message => message.group_id === group.id);
             setMessages(relevantMessages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)));
         } catch (error) {
-            console.error('Error fetching messages', error);
+            console.error(t('errorFetchingMessages'), error);
         }
     };
 
@@ -135,7 +142,7 @@ const ChatPage = () => {
                 }
                 setNewMessage('');
             } catch (error) {
-                console.error('Error sending message', error);
+                console.error(t('errorSendingMessage'), error);
             }
         }
     };
@@ -156,7 +163,7 @@ const ChatPage = () => {
             setEditingMessage(null);
             setNewMessage('');
         } catch (error) {
-            console.error('Error updating message', error);
+            console.error(t('errorUpdatingMessage'), error);
         }
     };
 
@@ -169,7 +176,7 @@ const ChatPage = () => {
                 fetchMessagesForGroup(selectedGroup);
             }
         } catch (error) {
-            console.error('Error deleting message', error);
+            console.error(t('errorDeletingMessage'), error);
         }
     };
 
@@ -241,7 +248,7 @@ const ChatPage = () => {
     };
 
     const confirmRemoveUser = (userId, userName) => {
-        if (window.confirm(`Voulez-vous retirer ${userName} du groupe?`)) {
+        if (window.confirm(t('confirmRemoveUser', { userName }))) {
             handleRemoveUserFromGroup(userId);
         }
     };
@@ -269,14 +276,14 @@ const ChatPage = () => {
                         <div className="p-4">
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder={t('searchPlaceholder')}
                                 className="w-full p-2 border border-gray-300 rounded-lg"
                                 value={searchText}
                                 onChange={handleSearchChange}
                             />
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold p-4">Friends</h3>
+                            <h3 className="text-lg font-bold p-4">{t('friends')}</h3>
                             <ul>
                                 {filteredFriends.map((friend, index) => (
                                     <li
@@ -296,7 +303,7 @@ const ChatPage = () => {
                             </ul>
                         </div>
                         <div>
-                            <h3 className="text-lg font-bold p-4">Groups</h3>
+                            <h3 className="text-lg font-bold p-4">{t('groups')}</h3>
                             <ul>
                                 {filteredGroups.map((group, index) => (
                                     <li
@@ -309,7 +316,7 @@ const ChatPage = () => {
                                         </div>
                                         <div>
                                             <div className="font-bold">{group.name}</div>
-                                            <div className="text-sm text-gray-500">Group</div>
+                                            <div className="text-sm text-gray-500">{t('group')}</div>
                                         </div>
                                     </li>
                                 ))}
@@ -341,7 +348,7 @@ const ChatPage = () => {
                                 </div>
                                 <div>
                                     <div className="font-bold">{selectedGroup.name}</div>
-                                    <div className="text-sm text-gray-500">Group</div>
+                                    <div className="text-sm text-gray-500">{t('group')}</div>
                                 </div>
                                 <div className="ml-auto flex items-center space-x-2">
                                     <FaCamera className="text-gray-500 cursor-pointer" />
@@ -375,13 +382,13 @@ const ChatPage = () => {
                                                                     className="flex items-center w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                                                                     onClick={() => handleEditMessage(message)}
                                                                 >
-                                                                    <FaEdit className="mr-2" /> Edit
+                                                                    <FaEdit className="mr-2" /> {t('edit')}
                                                                 </button>
                                                                 <button
                                                                     className="flex items-center w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
                                                                     onClick={() => handleDeleteMessage(message.id)}
                                                                 >
-                                                                    <FaTrash className="mr-2" /> Delete
+                                                                    <FaTrash className="mr-2" /> {t('delete')}
                                                                 </button>
                                                             </div>
                                                         )}
@@ -399,7 +406,7 @@ const ChatPage = () => {
                                 <input
                                     type="text"
                                     className="flex-1 p-2 border border-gray-300 rounded-lg"
-                                    placeholder="Enter text here..."
+                                    placeholder={t('enterTextHere')}
                                     value={newMessage}
                                     onChange={(e) => setNewMessage(e.target.value)}
                                 />
@@ -424,11 +431,11 @@ const ChatPage = () => {
                         >
                             <FaTimes size={20} />
                         </button>
-                        <h2 className="text-xl font-bold mb-4">Members of {selectedGroup.name}</h2>
+                        <h2 className="text-xl font-bold mb-4">{t('membersOf')} {selectedGroup.name}</h2>
                         <input
                             type="text"
                             className="w-full p-2 border border-gray-300 rounded-lg mb-4"
-                            placeholder="Rechercher un membre"
+                            placeholder={t('searchMemberPlaceholder')}
                             value={memberSearchText}
                             onChange={handleMemberSearchChange}
                         />
@@ -449,13 +456,13 @@ const ChatPage = () => {
                                             className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-700"
                                             onClick={() => confirmRemoveUser(member?.id, `${member?.first_name} ${member?.last_name}`)}
                                         >
-                                            Retirer
+                                            {t('remove')}
                                         </button>
                                     </li>
                                 ))}
                             </ul>
                         </div>
-                        <h2 className="text-xl font-bold mb-4">Add Users</h2>
+                        <h2 className="text-xl font-bold mb-4">{t('addUsers')}</h2>
                         <div className="max-h-60 overflow-y-auto">
                             <ul>
                                 {nonMembers.map((user) => (
@@ -473,7 +480,7 @@ const ChatPage = () => {
                                             className="bg-green-500 text-white py-1 px-2 rounded hover:bg-green-700"
                                             onClick={() => handleAddUserToGroup(user.id)}
                                         >
-                                            Add
+                                            {t('add')}
                                         </button>
                                     </li>
                                 ))}

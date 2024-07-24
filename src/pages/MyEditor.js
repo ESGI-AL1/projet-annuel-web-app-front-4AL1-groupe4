@@ -12,13 +12,15 @@ import { CiSquareChevDown } from 'react-icons/ci';
 import { MdOutlineCloudDone } from 'react-icons/md';
 import { FcCancel } from 'react-icons/fc';
 import { IoMdAttach } from "react-icons/io";
-import { BsCloudDownload } from 'react-icons/bs'; // Import the download icon
+import { BsCloudDownload } from 'react-icons/bs';
 import { UserContext } from "../contexts/UserContext";
+import { useTranslation } from 'react-i18next';
 
 const MyEditor = () => {
     const location = useLocation();
     const program = location.state?.program || null;
     const { user } = useContext(UserContext);
+    const { t } = useTranslation();
     const [code, setCode] = useState(program ? '' : '// Place your code here');
     const [language, setLanguage] = useState('javascript');
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -30,8 +32,8 @@ const MyEditor = () => {
     const [inputFileType, setInputFileType] = useState(program ? program.input_type : '.txt');
     const [outputFileType, setOutputFileType] = useState(program ? program.output_type : '.txt');
     const [isVisible, setIsVisible] = useState(program ? program.isVisible : true);
-    const [fileUrl, setFileUrl] = useState(null); // State for file URL
-    const [fileDownloadName, setFileDownloadName] = useState(null); // State for file download name
+    const [fileUrl, setFileUrl] = useState(null);
+    const [fileDownloadName, setFileDownloadName] = useState(null);
     const fileInputRef = useRef(null);
 
     const fileTypes = ['.txt', '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.json', '.xml', '.html', '.js', '.py', '.java', '.png', '.jpg', '.jpeg', '.gif'];
@@ -72,7 +74,7 @@ const MyEditor = () => {
             const text = await response.text();
             setCode(text);
         } catch (error) {
-            console.error("Error fetching file content", error);
+            console.error(t('error_fetching_file'), error);
         }
     };
 
@@ -112,7 +114,7 @@ const MyEditor = () => {
     };
 
     const handleExport = () => {
-        const fileName = prompt('Enter file name:');
+        const fileName = prompt(t('enter_file_name'));
         if (fileName) {
             const extensionMap = {
                 'javascript': 'js',
@@ -188,10 +190,10 @@ const MyEditor = () => {
             } else {
                 await createProgram(formData);
             }
-            setResult('Program successfully deployed!');
+            setResult(t('program_deployed_success'));
         } catch (error) {
-            console.error('Error deploying program:', error);
-            setResult('Error deploying program.');
+            console.error(t('error_deploying_program'), error);
+            setResult(t('program_deploy_error'));
         }
     };
 
@@ -208,7 +210,7 @@ const MyEditor = () => {
 
     const handleRun = async () => {
         if (!fileName) {
-            setResult("Please select a file before executing.");
+            setResult(t('select_file_before_run'));
             return;
         }
 
@@ -247,10 +249,10 @@ const MyEditor = () => {
             const fileUrl = response.data.file_url;
             setFileUrl(fileUrl);
             setFileDownloadName(fileUrl.split('/').pop());
-            setResult('Program executed successfully!');
+            setResult(t('program_executed_success'));
         } catch (error) {
-            console.error('Error executing program:', error);
-            setResult(`Error executing program: ${error.response?.data?.error || error.message}`);
+            console.error(t('error_executing_program'), error);
+            setResult(`${t('program_execute_error')}: ${error.response?.data?.error || error.message}`);
         }
     };
 
@@ -276,17 +278,17 @@ const MyEditor = () => {
                 </select>
                 <div className="flex items-center gap-4">
                     <VscRunAll
-                        title="Run"
+                        title={t('run')}
                         onClick={handleRun}
                         className="text-2xl cursor-pointer hover:text-gray-400 ml-4"
                     />
                     <PiRocketLaunchLight
-                        title="Deploy"
+                        title={t('deploy')}
                         onClick={handleDeploy}
                         className="text-2xl cursor-pointer hover:text-gray-400 ml-4"
                     />
                     <CiExport
-                        title="Export"
+                        title={t('export')}
                         onClick={handleExport}
                         className="text-2xl cursor-pointer hover:text-gray-400 ml-4"
                     />
@@ -303,7 +305,7 @@ const MyEditor = () => {
                             className="bg-gray-800 text-white pl-10 pr-8 py-1 rounded focus:outline-none border-white"
                             readOnly
                             value={fileName}
-                            placeholder="Select file"
+                            placeholder={t('select_file')}
                         />
                         <CiSquareChevDown
                             className="text-2xl text-white absolute right-2 cursor-pointer"
@@ -313,7 +315,7 @@ const MyEditor = () => {
                     {fileUrl && (
                         <div className="flex items-center">
                             <BsCloudDownload
-                                title="Download File"
+                                title={t('download_file')}
                                 onClick={handleDownload}
                                 className="text-2xl cursor-pointer hover:text-gray-400 ml-4"
                             />
@@ -322,13 +324,13 @@ const MyEditor = () => {
                     )}
                     {isFullScreen ? (
                         <CgCompressLeft
-                            title="Exit Fullscreen"
+                            title={t('exit_fullscreen')}
                             onClick={handleFullScreenToggle}
                             className="text-2xl cursor-pointer hover:text-gray-400 ml-4"
                         />
                     ) : (
                         <AiOutlineExpandAlt
-                            title="Enter Fullscreen"
+                            title={t('enter_fullscreen')}
                             onClick={handleFullScreenToggle}
                             className="text-2xl cursor-pointer hover:text-gray-400 ml-4"
                         />
@@ -346,28 +348,28 @@ const MyEditor = () => {
                 />
             </div>
             <div className="w-full bg-gray-800 text-white px-8 py-8 mb-2">
-                <h2 className="text-lg font-bold">Result:</h2>
+                <h2 className="text-lg font-bold">{t('result')}:</h2>
                 <pre>{result}</pre>
             </div>
             {isModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75">
                     <div className="bg-gray-800 text-white rounded-lg p-8 w-11/12 md:w-1/2 lg:w-1/3">
-                        <h2 className="text-2xl mb-4">Deploy Program</h2>
+                        <h2 className="text-2xl mb-4">{t('deploy_program')}</h2>
                         <input
                             type="text"
-                            placeholder="Title"
+                            placeholder={t('title')}
                             className="w-full p-2 mb-4 bg-gray-900 border border-gray-700 rounded"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                         />
                         <input
                             type="text"
-                            placeholder="Description"
+                            placeholder={t('description')}
                             className="w-full p-2 mb-4 bg-gray-900 border border-gray-700 rounded"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                         />
-                        <label className="block mb-2">Input File Type</label>
+                        <label className="block mb-2">{t('input_file_type')}</label>
                         <select
                             value={inputFileType}
                             onChange={(e) => setInputFileType(e.target.value)}
@@ -377,7 +379,7 @@ const MyEditor = () => {
                                 <option key={type} value={type}>{type}</option>
                             ))}
                         </select>
-                        <label className="block mb-2">Output File Type</label>
+                        <label className="block mb-2">{t('output_file_type')}</label>
                         <select
                             value={outputFileType}
                             onChange={(e) => setOutputFileType(e.target.value)}
@@ -392,13 +394,13 @@ const MyEditor = () => {
                                 onClick={() => setIsModalOpen(false)}
                                 className="flex items-center px-4 py-2 bg-red-600 rounded hover:bg-red-700"
                             >
-                                <FcCancel className="mr-2" /> Cancel
+                                <FcCancel className="mr-2" /> {t('cancel')}
                             </button>
                             <button
                                 onClick={handleConfirm}
                                 className="flex items-center px-4 py-2 bg-green-600 rounded hover:bg-green-700"
                             >
-                                <MdOutlineCloudDone className="mr-2" /> Confirm
+                                <MdOutlineCloudDone className="mr-2" /> {t('confirm')}
                             </button>
                         </div>
                     </div>

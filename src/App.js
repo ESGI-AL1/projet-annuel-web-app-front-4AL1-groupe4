@@ -18,6 +18,8 @@ import CreateGroupePage from "./pages/CreateGroupePage";
 import GroupePage from "./pages/GroupePage";
 import {initializeUsers} from "./utils/initializeUsers";
 import ChatPage from "./pages/ChatPage";
+import  "./i18n"
+import UsersPage from "./pages/usersPage";
 
 function App() {
   useEffect(() => {
@@ -45,6 +47,7 @@ function App() {
                 <Route path="/pipeline" element={<Pipeline />} />
                 <Route path="/createGroupe" element={<CreateGroupePage />} />
                 <Route path="/chat" element={<ChatPage />} />
+                <Route path="/listFriends" element={<UsersPage />} />
                 <Route path="/groupePage" element={<GroupePage />} />
                 <Route path="/groupePage/:id" element={<GroupePage />} />
               </Route>

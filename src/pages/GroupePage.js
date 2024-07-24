@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AiOutlineUserAdd, AiOutlineMore } from 'react-icons/ai';
 import { getGroupById, deleteGroup } from '../services/api.groups';
-import {toast} from "react-toastify";
+import { toast } from "react-toastify";
+import { useTranslation } from 'react-i18next';
 
 function GroupePage() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const { id } = useParams();
     const [group, setGroup] = useState({});
@@ -16,18 +18,18 @@ function GroupePage() {
                 const response = await getGroupById(id);
                 setGroup(response.data);
             } catch (error) {
-                toast.error('Erreur lors de la récupération du groupe', error);
+                toast.error(t('error_fetching_group'), error);
             }
         };
         fetchGroup();
-    }, [id]);
+    }, [id, t]);
 
     const handleDeleteGroup = async () => {
         try {
             await deleteGroup(id);
             navigate('/groups');
         } catch (error) {
-            console.error('Erreur lors de la suppression du groupe', error);
+            console.error(t('error_deleting_group'), error);
         }
     };
 
@@ -42,7 +44,7 @@ function GroupePage() {
                 <div className="flex items-center">
                     <input
                         type="text"
-                        placeholder="Rechercher..."
+                        placeholder={t('search')}
                         className="p-2 border rounded mr-4"
                     />
                     <AiOutlineUserAdd className="text-xl mr-4 cursor-pointer" />
@@ -54,13 +56,13 @@ function GroupePage() {
                                     onClick={handleEditGroup}
                                     className="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-200"
                                 >
-                                    Modifier le groupe
+                                    {t('edit_group')}
                                 </button>
                                 <button
                                     onClick={handleDeleteGroup}
                                     className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-200"
                                 >
-                                    Supprimer le groupe
+                                    {t('delete_group')}
                                 </button>
                             </div>
                         )}

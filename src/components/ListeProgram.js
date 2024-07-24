@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { getPublicPrograms } from "../services/api.program";
 import ProgramDetails from './ProgramDetails';
+import { useTranslation } from 'react-i18next';
 
 const ListeProgram = ({ user, actions, setActions }) => {
+    const { t } = useTranslation();
     const [programs, setPrograms] = useState([]);
     const [filteredPrograms, setFilteredPrograms] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -18,7 +20,7 @@ const ListeProgram = ({ user, actions, setActions }) => {
             setPrograms(visiblePrograms);
             setFilteredPrograms(visiblePrograms);
         } catch (error) {
-            console.error("Error fetching programs", error);
+            console.error(t('error_fetching_programs'), error);
         }
     };
 
@@ -31,22 +33,14 @@ const ListeProgram = ({ user, actions, setActions }) => {
 
     return (
         <div className="mt-4 space-y-4">
-            {/*
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search programs"
-        className="p-2 border border-gray-300 rounded"
-      />
-      <button onClick={handleSearch} className="ml-2 p-2 bg-blue-500 text-white rounded">Search</button>
-      */}
+
             {filteredPrograms.map(program => (
                 <div key={program.id} className="p-4 border border-gray-100 rounded-lg shadow-lg bg-white relative">
-                    <ProgramDetails program={program} user={user} actions={actions} setActions={setActions}/>
+                    <ProgramDetails program={program} user={user} actions={actions} setActions={setActions} />
                 </div>
             ))}
-        </div>);
+        </div>
+    );
 };
 
 export default ListeProgram;

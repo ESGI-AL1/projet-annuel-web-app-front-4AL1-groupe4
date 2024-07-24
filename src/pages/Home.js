@@ -6,6 +6,7 @@ import ListeProgram from "../components/ListeProgram";
 import ListeFriend from "../components/ListeFriend";
 import ListeGroup from "../components/ListeGroup";
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 function Home() {
     const { user } = useContext(UserContext);
@@ -13,6 +14,7 @@ function Home() {
     const [friends, setFriends] = useState([]);
     const [requests, setRequests] = useState([]);
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     useEffect(() => {
         if (user) {
@@ -29,7 +31,7 @@ function Home() {
             const response = await getActions();
             setActions(response.data);
         } catch (error) {
-            console.error("Error fetching actions", error);
+            console.error(t("error_fetching_actions"), error);
         }
     };
 
@@ -38,7 +40,7 @@ function Home() {
             const response = await listFriends();
             setFriends(response.data);
         } catch (error) {
-            console.error('Error fetching friends:', error);
+            console.error(t("error_fetching_friends"), error);
         }
     };
 
@@ -47,7 +49,7 @@ function Home() {
             const response = await listFriendRequests();
             setRequests(response.data);
         } catch (error) {
-            console.error('Error fetching friend requests:', error);
+            console.error(t("error_fetching_requests"), error);
         }
     };
 
@@ -57,7 +59,7 @@ function Home() {
             fetchFriends();
             fetchRequests();
         } catch (error) {
-            console.error('Error accepting friend request:', error);
+            console.error(t("error_accepting_request"), error);
         }
     };
 
@@ -66,7 +68,7 @@ function Home() {
             await manageFriendRequest(friendshipId, 'reject');
             fetchRequests();
         } catch (error) {
-            console.error('Error rejecting friend request:', error);
+            console.error(t("error_rejecting_request"), error);
         }
     };
 

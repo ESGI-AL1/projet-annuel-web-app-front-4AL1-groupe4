@@ -7,8 +7,10 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import crewimage from "../assets/photos/groupe.png";
 import { UserContext } from '../contexts/UserContext';
+import { useTranslation } from 'react-i18next';
 
 function CreateGroupePage() {
+    const { t } = useTranslation();
     const { user } = useContext(UserContext);
     const [groupName, setGroupName] = useState('');
     const [description, setDescription] = useState('');
@@ -28,7 +30,7 @@ function CreateGroupePage() {
             const filteredUsers = allUsers.filter(u => u.id !== user.id);
             setUsers(filteredUsers);
         } catch (error) {
-            console.error('Erreur lors de la récupération des utilisateurs', error);
+            console.error(t('error_fetching_users'), error);
         }
     };
 
@@ -42,14 +44,14 @@ function CreateGroupePage() {
             };
             const response = await createGroup(groupData);
             if (response.status === 201) {
-                toast.success('Groupe créé avec succès !');
+                toast.success(t('group_created_success'));
                 setTimeout(() => {
                     navigate('/home', { state: { newGroup: response.data } });
                 }, 1500);
             }
         } catch (error) {
-            toast.error('Erreur lors de la création du groupe');
-            console.error('Erreur lors de la création du groupe', error);
+            toast.error(t('error_creating_group'));
+            console.error(t('error_creating_group'), error);
         }
     };
 
@@ -72,8 +74,8 @@ function CreateGroupePage() {
             <ToastContainer />
             <img src={crewimage} alt="Groupe" className="w-1/3 h-auto" />
             <form onSubmit={handleSubmit} className="flex flex-col w-1/3 p-4 bg-white shadow-lg rounded-lg">
-                <h1 className="text-2xl mb-4 text-center">Créer un Groupe</h1>
-                <label className="mb-2">Nom du groupe</label>
+                <h1 className="text-2xl mb-4 text-center">{t('create_group')}</h1>
+                <label className="mb-2">{t('group_name')}</label>
                 <input
                     type="text"
                     value={groupName}
@@ -81,14 +83,14 @@ function CreateGroupePage() {
                     className="p-2 border rounded mb-4"
                     required
                 />
-                <label className="mb-2">Description</label>
+                <label className="mb-2">{t('description')}</label>
                 <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="p-2 border rounded mb-4"
                     required
                 />
-                <label className="mb-2">Ajouter des Membres</label>
+                <label className="mb-2">{t('add_members')}</label>
                 <div className="max-h-40 overflow-y-auto mb-4">
                     {users.map((user) => (
                         <div key={user.id} className="flex items-center mb-2">
@@ -108,13 +110,13 @@ function CreateGroupePage() {
                         onClick={handleCancel}
                         className="flex items-center justify-center p-2 bg-red-500 text-white rounded"
                     >
-                        <AiOutlineClose className="mr-2" /> Annuler
+                        <AiOutlineClose className="mr-2" /> {t('cancel')}
                     </button>
                     <button
                         type="submit"
                         className="flex items-center justify-center p-2 bg-green-500 text-white rounded"
                     >
-                        <AiOutlineCheck className="mr-2" /> Valider
+                        <AiOutlineCheck className="mr-2" /> {t('submit')}
                     </button>
                 </div>
             </form>
