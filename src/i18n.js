@@ -150,7 +150,32 @@ i18n
                     "errorImageAlt": "Error",
                     "unauthorizedPageTitle": "401 - Unauthorized page",
                     "unauthorizedPageMessage": "Ummmm Ummmm Not so fast.",
-                    "goToLogin": "Go to Login"
+                    "goToLogin": "Go to Login",
+
+
+
+                    "searchPlaceholder": "Search...",
+                    "friends": "Friends",
+                    "groups": "Groups",
+                    "enterTextHere": "Enter text here...",
+                    "membersOf": "Members of",
+                    "searchMemberPlaceholder": "Search a member",
+                    "addUsers": "Add Users",
+                    "remove": "Remove",
+                    "errorFetchingFriends": "Error fetching friends",
+                    "errorFetchingGroups": "Error fetching groups",
+                    "errorFetchingUsers": "Error fetching users",
+                    "errorFetchingMessages": "Error fetching messages",
+                    "errorSendingMessage": "Error sending message",
+                    "errorUpdatingMessage": "Error updating message",
+                    "errorDeletingMessage": "Error deleting message",
+                    "confirmRemoveUser": "Do you want to remove {userName} from the group?",
+                    "group": "Group",
+                    "modify": "Edit",
+                    "reply": "Reply",
+                    "errorFetchingAuthor": "Error fetching author information"
+
+
 
 
 
@@ -300,7 +325,29 @@ i18n
                     "errorImageAlt": "Erreur",
                     "unauthorizedPageTitle": "401 - Page non autorisée",
                     "unauthorizedPageMessage": "Hum hum, pas si vite.",
-                    "goToLogin": "Aller à la page de connexion"
+                    "goToLogin": "Aller à la page de connexion",
+
+
+                    "searchPlaceholder": "Rechercher...",
+                    "friends": "Amis",
+                    "groups": "Groupes",
+                    "enterTextHere": "Entrez le texte ici...",
+                    "membersOf": "Membres de",
+                    "searchMemberPlaceholder": "Rechercher un membre",
+                    "addUsers": "Ajouter des utilisateurs",
+                    "remove": "Retirer",
+                    "errorFetchingFriends": "Erreur lors de la récupération des amis",
+                    "errorFetchingGroups": "Erreur lors de la récupération des groupes",
+                    "errorFetchingUsers": "Erreur lors de la récupération des utilisateurs",
+                    "errorFetchingMessages": "Erreur lors de la récupération des messages",
+                    "errorSendingMessage": "Erreur lors de l'envoi du message",
+                    "errorUpdatingMessage": "Erreur lors de la mise à jour du message",
+                    "errorDeletingMessage": "Erreur lors de la suppression du message",
+                    "confirmRemoveUser": "Voulez-vous retirer {userName} du groupe?",
+                    "group": "Groupe",
+                    "modify": "Modifier",
+                    "reply": "Répondre",
+                    "errorFetchingAuthor": "Erreur lors de la récupération des informations de l'auteur"
 
                 }
             }

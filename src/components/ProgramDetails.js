@@ -92,9 +92,7 @@ const ProgramDetails = ({ program, user }) => {
                         like: 0,
                         dislike: 0,
                         share: 0,
-                        unshare: 0,
-                        love: 0,
-                        unlove: 0
+                        love: 0
                     };
                 }
                 programCounts[entityId][actionType]++;
@@ -104,9 +102,7 @@ const ProgramDetails = ({ program, user }) => {
                         like: 0,
                         dislike: 0,
                         share: 0,
-                        unshare: 0,
-                        love: 0,
-                        unlove: 0
+                        love: 0
                     };
                 }
                 commentCounts[entityId][actionType]++;
@@ -182,7 +178,7 @@ const ProgramDetails = ({ program, user }) => {
 
     const handleAction = async (type, entityId, entity) => {
         console.log('Handling action:', type, entityId, entity);
-        const existingAction = actions.find(action => action.action === type && action.author_id === user.id && action[entity] === entityId);
+        const existingAction = actions.find(action => action.action === type && action.author_id === user.id && (entity === 'program' ? action.program_id === entityId : action.comment_id === entityId));
         if (existingAction) {
             try {
                 await deleteAction(existingAction.id);

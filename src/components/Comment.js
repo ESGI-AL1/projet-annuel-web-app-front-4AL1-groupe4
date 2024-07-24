@@ -3,10 +3,10 @@ import { FaEllipsisV, FaEdit, FaTrash, FaHeart, FaRegHeart } from 'react-icons/f
 import { GoReply, GoThumbsup, GoThumbsdown } from 'react-icons/go';
 import { getUserInformation } from "../services/api.user";
 import IconToggle from './IconToggle';
-import t from "../i18n"
-
+import { useTranslation } from 'react-i18next';
 
 const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment, user, actions, setActions, handleAction, countActions }) => {
+    const { t } = useTranslation();
     const [author, setAuthor] = useState(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef(null);
@@ -59,7 +59,7 @@ const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment,
                                     setIsMenuOpen(false);
                                 }}
                             >
-                                <FaEdit className="mr-2"/> Modifier
+                                <FaEdit className="mr-2"/> {t('modify')}
                             </button>
                             <button
                                 className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-200 flex items-center"
@@ -68,7 +68,7 @@ const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment,
                                     setIsMenuOpen(false);
                                 }}
                             >
-                                <FaTrash className="mr-2"/> Supprimer
+                                <FaTrash className="mr-2"/> {t('delete')}
                             </button>
                         </div>
                     )}
@@ -108,7 +108,7 @@ const Comment = ({ comment, handleReply, handleEditComment, handleDeleteComment,
                         handleAction={handleAction}
                     />
                     <button onClick={() => handleReply(comment)} className="text-blue-500 flex items-center">
-                        <GoReply className="mr-1"/> Replier
+                        <GoReply className="mr-1"/> {t('reply')}
                     </button>
                 </div>
             </div>

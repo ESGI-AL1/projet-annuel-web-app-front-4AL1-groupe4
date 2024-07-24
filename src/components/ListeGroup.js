@@ -164,7 +164,7 @@ const ListeGroup = () => {
 
     return (
         <div className="bg-gray-100 rounded shadow-lg max-h-96 overflow-y-auto relative">
-            <div className="sticky top-0 bg-white p-4 z-10">
+            <div className="sticky top-0 bg-white p-4 z-8">
                 <h2 className="text-2xl font-bold mb-4">{t("group_list")}</h2>
             </div>
             <div className="p-4">
