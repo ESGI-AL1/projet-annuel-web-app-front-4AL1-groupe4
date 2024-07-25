@@ -202,21 +202,6 @@ const Profile = () => {
                             Valider
                         </button>
                     </form>
-                    <h3 className="text-xl font-bold mt-8 mb-4">Connexion récente</h3>
-                    <div className="flex space-x-4">
-                        <ContactAvatar name="Joe A." />
-                        <ContactAvatar name="Dylan C." />
-                        <ContactAvatar name="Ethan C." />
-                        <ContactAvatar name="Louis W." />
-                        <ContactAvatar name="Jacob S." />
-                        <ContactAvatar name="Katie U." />
-                    </div>
-                    <h3 className="text-xl font-bold mt-8 mb-4">3 dernières publications...</h3>
-                    <div className="flex space-x-4">
-                        <TeamCard teamName="Product Team" />
-                        <TeamCard teamName="Security Team" />
-                        <TeamCard teamName="Japan Team" />
-                    </div>
                 </div>
             </div>
         </div>
